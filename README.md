@@ -1,4 +1,10 @@
 bondarewicz.github.io
 =====================
 
-My Personal Website
+Stuff used:
+- jQuery
+- Bootstrap
+- Ip.js
+- Moment.js
+- Livestamp.js
+- WhichBrowser.js
