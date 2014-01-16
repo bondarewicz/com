@@ -3,10 +3,9 @@ body {
   padding-bottom: 20px;
 }
 
-.navbar {
-  margin-bottom: 20px;
-}
-
 .jumbotron {
 	text-align: center;
+	background-color: #ffffff;
+	font-size: 24px;
+	font-weight: 200;
 }
