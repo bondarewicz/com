@@ -1,10 +1,6 @@
-bondarewicz.github.io
-=====================
+# bondarewicz.com
 
-Stuff used:
-- jQuery
-- Bootstrap
-- Ip.js
-- Moment.js
-- Livestamp.js
-- WhichBrowser.js
+ref:
+- html5up.net
+- l2.io
+- whichbrowser.net
