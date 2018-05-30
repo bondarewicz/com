@@ -1,73 +1,80 @@
 <!DOCTYPE HTML>
 <html>
-	<head>
-		<title>bondarewicz.com</title>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<!--[if lte IE 8]><script src="assets/js/ie/html5shiv.js"></script><![endif]-->
-		<link rel="stylesheet" href="assets/css/main.css" />
-		<!--[if lte IE 8]><link rel="stylesheet" href="assets/css/ie8.css" /><![endif]-->
-		<!--[if lte IE 9]><link rel="stylesheet" href="assets/css/ie9.css" /><![endif]-->
-	</head>
-	<body id="top">
 
-		<!-- Header -->
-			<header id="header">
-				<div class="content">
-					<h1><a href="#">Łukasz Bondarewicz</a></h1>
-					<ul class="icons">
-						<li><a id="mail" href="#" class="icon fa-at"><span class="label">mail</span></a></li>
-						<li><a href="https://twitter.com/bondarewicz" class="icon fa-twitter"><span class="label">twitter</span></a></li>
-						<li><a href="https://github.com/bondarewicz" class="icon fa-github"><span class="label">instagram</span></a></li>
-					</ul>
-					<p>
-						<span id="ipv4"></span><br />
-						<span id="ipv6"></span><br />
-						<span id="icon"></span><span id="agent"></span>
-					</p>
-					<p>
-						<ul class="actions">
-							<li><a href="#dev" class="button icon fa-code scrolly">dev</a></li>
-						</ul>
-					</p>
-				</div>
-				<div class="image phone"><div class="inner"><img src="./assets/img/me.jpg" alt="" /></div></div>
-			</header>
+<head>
+	<title>bondarewicz.com</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<!--[if lte IE 8]><script src="assets/js/ie/html5shiv.js"></script><![endif]-->
+	<link rel="stylesheet" href="style.css" />
+	<link rel="stylesheet" href="highlight.css">
+</head>
 
-		<!-- Footer -->
-			<footer id="footer">
-				<pre id="dev"></pre>
-			</footer>
+<body>
+	<pre><code class="js">/**
+  * Hi, I'm Łukasz (/ˈwu.kaʂ/), web developer	
+  *
+  * Your browser info
+  *
+  * @ip 	<span id="ipv4"></span>
+  * @browser 	<span id="browser"></span>
+  * @screen 	<span id="screen"></span>
+  * @viewport 	<span id="viewport"></span>
+  * @agent 	<span id="agent"></span>
+  */
 
-		<!-- Scripts -->
-			<script src="assets/js/jquery.min.js"></script>
-			<script src="assets/js/jquery.scrolly.min.js"></script>
-			<script src="assets/js/skel.min.js"></script>
-			<script src="assets/js/util.js"></script>
-			<!--[if lte IE 8]><script src="assets/js/ie/respond.min.js"></script><![endif]-->
-			<script src="assets/js/main.js"></script>
-			<script type="text/javascript" src="https://www.l2.io/ip.js?var=ipv4"></script>
-			<script type="text/javascript" src="https://l2.io/ip.js?var=ipv6"></script>
-			<script>
-	      (function(){var p=[],w=window,d=document,e=f=0;p.push('ua='+encodeURIComponent(navigator.userAgent));e|=w.ActiveXObject?1:0;e|=w.opera?2:0;e|=w.chrome?4:0;
-	      e|='getBoxObjectFor' in d || 'mozInnerScreenX' in w?8:0;e|=('WebKitCSSMatrix' in w||'WebKitPoint' in w||'webkitStorageInfo' in w||'webkitURL' in w)?16:0;
-	      e|=(e&16&&({}.toString).toString().indexOf("\n")===-1)?32:0;p.push('e='+e);f|='sandbox' in d.createElement('iframe')?1:0;f|='WebSocket' in w?2:0;
-	      f|=w.Worker?4:0;f|=w.applicationCache?8:0;f|=w.history && history.pushState?16:0;f|=d.documentElement.webkitRequestFullScreen?32:0;f|='FileReader' in w?64:0;
-	      p.push('f='+f);p.push('r='+Math.random().toString(36).substring(7));p.push('w='+screen.width);p.push('h='+screen.height);var s=d.createElement('script');
-	      s.src='https://api.whichbrowser.net/dev/detect.js?' + p.join('&');d.getElementsByTagName('head')[0].appendChild(s);})();
-	    </script>
-			<script type="text/javascript">
+const code = true;
 
-	      var _gaq = _gaq || [];
-	      _gaq.push(['_setAccount', 'UA-7659769-3']);
-	      _gaq.push(['_trackPageview']);
+import { <a href="#" id="mail">mail</a >, <a href="https://twitter.com/bondarewicz" id="mail">twitter</a>, <a href="https://github.com/bondarewicz" id="mail">github</a> } from "interwebs";
 
-	      (function() {
-	        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-	        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-	        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-	      })();
+let skills = [
+  'html',
+  'css',
+  'sass',
+  'es5',
+  'es6',
+  'node',
+  'git',
+  'babel',
+  'rabbitmq'
+];
 
-	    </script>
-	</body>
+let clouds = ['azure', 'gcp', 'rackspace'];
+
+let recent = [
+  'express-js',
+  'react',
+  'redux',
+  'npm',
+  'docker',
+  'kubectl',
+  'hashicorp'
+];
+
+let interests = [
+  'agile',
+  'scalability',
+  'performance',
+  'ddd',
+  'tdd',
+  'bdd',
+  'ci/cd',
+  'microservices',
+  'rest api'
+];
+
+// @TODO try typing: uuid, ref, ip, ua, b, l, s
+
+</code></pre>
+	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/bowser/1.9.3/bowser.min.js"></script>
+	<script type="text/javascript" src="//cdn.rawgit.com/namuol/cheet.js/master/cheet.min.js"></script>
+	<script type="text/javascript" src="https://www.l2.io/ip.js?var=ipv4"></script>
+	<script type="text/javascript" src="https://l2.io/ip.js?var=ipv6"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+	<script type="text/javascript" src="app.js"></script>
+	<script>
+		hljs.initHighlightingOnLoad();
+	</script>
+</body>
+
 </html>
