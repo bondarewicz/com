@@ -1,0 +1,35 @@
+body {
+  background: #272822;
+  font-size: 24px;
+  font-family: monospace;
+  color: #75715e;
+}
+
+a, a:hover, a:focus, a:visited, a:active {
+  color: #ddd;
+  text-decoration: none;
+}
+
+@media screen and (max-width: 1680px) {
+  body {
+    font-size: 24px;
+  }
+}
+
+@media screen and (max-width: 1080px) {
+  body {
+    font-size: 18px;
+  }
+}
+
+@media screen and (max-width: 840px) {
+  body {
+    font-size: 14px;
+  }
+}
+
+@media screen and (max-width: 736px) {
+  body {
+    font-size: 12px;
+  }
+}
