@@ -1,48 +1,87 @@
-cheet('u u i d', function () {
-  let uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-    let r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+function uuid() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    let r = Math.random() * 16 | 0,
+      v = c == 'x'
+        ? r
+        : (r & 0x3 | 0x8);
     return v.toString(16);
   });
-  alert(uuid)
+}
+
+function generateUuid() {
+  if (window.confirm(uuid() + "\nregenerate?")) 
+    generateUuid();
+  }
+
+cheet('u u i d', function() {
+  generateUuid()
 });
 
-cheet('r e f', function () {
-  var text = "";
+function ref() {
+  var ref = "";
   var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-  for (var i = 0; i < 20; i++)
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  for (var i = 0; i < 20; i++) {
+    ref += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return ref;
+}
 
-  alert(text);
+function generateRef() {
+  if (window.confirm(ref() + "\nregenerate?")) 
+    generateRef();
+  }
+
+cheet('r e f', function() {
+  generateRef();
 });
 
-cheet('i p', function () {
-  window.ip = ipv4+'\n'+ipv6;
-  alert(ipv4+'\n'+ipv6);
+function ip() {
+  return ipv4 + '\n' + ipv6;
+}
+
+cheet('i p', function() {
+  alert(ip());
 });
 
-cheet('u a', function () {
-  alert(navigator.userAgent);
+function ua() {
+  return navigator.userAgent;
+}
+cheet('u a', function() {
+  alert(ua());
 });
 
-cheet('b', function () {
-  alert(bowser.name + ' ' + bowser.version + ' on ' + bowser.osname + ' ' + bowser.osversion);
+function b() {
+  return bowser.name + ' ' + bowser.version + ' on ' + bowser.osname + ' ' + bowser.osversion;
+}
+
+cheet('b', function() {
+  alert(b());
 });
 
-cheet('l', function () {
-  alert(navigator.languages);
+function l() {
+  return navigator.languages;
+}
+
+cheet('l', function() {
+  alert(l());
 });
 
-cheet('s', function () {
+function s() {
   var size = {
     width: window.innerWidth || document.body.clientWidth,
     height: window.innerHeight || document.body.clientHeight
   };
-  alert('Screen: ' + window.screen.width+'x'+window.screen.height+ ' '+window.screen.colorDepth +'bit color \nBrowser: ' +size.width + 'x' + size.height);
+  return 'Screen: ' + window.screen.width + 'x' + window.screen.height + ' ' + window.screen.colorDepth + 'bit color \nBrowser: ' + size.width + 'x' + size.height;
+
+}
+
+cheet('s', function() {
+  alert(s());
 });
 
-window.onload = function() { 
-  
+window.onload = function() {
+
   // @see http://www.jottings.com/obfuscator/
   coded = "WBR1JkySteI@flJtq.eBl"
   key = "Cfezn3o7Q80GKwslNk1ZLOAyIR9BhEVabXSjqY2iTugcp6H4P5DxJWUMmvrdtF"
@@ -57,16 +96,16 @@ window.onload = function() {
       link += (key.charAt(ltr))
     }
   }
-  
+
   document.getElementById("mail").href = "mailto:" + link;
 }
 
-window.ontouchmove = function() { 
-  return false; 
+window.ontouchmove = function() {
+  return false;
 }
 
-window.onorientationchange = function() { 
-  document.body.scrollTop = 0; 
+window.onorientationchange = function() {
+  document.body.scrollTop = 0;
 }
 
 window.onresize = function(event) {
@@ -88,7 +127,7 @@ window.onresize = function(event) {
 document.getElementById('ipv4').innerHTML = ipv4;
 // document.getElementById('ipv6').innerHTML = ipv6;
 
-document.getElementById('browser').innerHTML = bowser.name + ' ' + bowser.version + ' ('+navigator.language+') on ' + bowser.osname + ' ' + bowser.osversion;
+document.getElementById('browser').innerHTML = bowser.name + ' ' + bowser.version + ' (' + navigator.language + ') on ' + bowser.osname + ' ' + bowser.osversion;
 document.getElementById('agent').innerHTML = navigator.userAgent;
 var size = {
   width: window.innerWidth || document.body.clientWidth,
