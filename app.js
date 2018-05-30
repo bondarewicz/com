@@ -13,10 +13,6 @@ function generateUuid() {
     generateUuid();
   }
 
-cheet('u u i d', function() {
-  generateUuid()
-});
-
 function ref() {
   var ref = "";
   var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -32,40 +28,21 @@ function generateRef() {
     generateRef();
   }
 
-cheet('r e f', function() {
-  generateRef();
-});
-
 function ip() {
   return ipv4 + '\n' + ipv6;
 }
 
-cheet('i p', function() {
-  alert(ip());
-});
-
 function ua() {
   return navigator.userAgent;
 }
-cheet('u a', function() {
-  alert(ua());
-});
 
 function b() {
   return bowser.name + ' ' + bowser.version + ' on ' + bowser.osname + ' ' + bowser.osversion;
 }
 
-cheet('b', function() {
-  alert(b());
-});
-
 function l() {
   return navigator.languages;
 }
-
-cheet('l', function() {
-  alert(l());
-});
 
 function s() {
   var size = {
@@ -73,12 +50,7 @@ function s() {
     height: window.innerHeight || document.body.clientHeight
   };
   return 'Screen: ' + window.screen.width + 'x' + window.screen.height + ' ' + window.screen.colorDepth + 'bit color \nBrowser: ' + size.width + 'x' + size.height;
-
 }
-
-cheet('s', function() {
-  alert(s());
-});
 
 window.onload = function() {
 
@@ -125,9 +97,10 @@ window.onresize = function(event) {
 };
 
 document.getElementById('ipv4').innerHTML = ipv4;
-// document.getElementById('ipv6').innerHTML = ipv6;
+document.getElementById('ipv6').innerHTML = ipv6;
+document.getElementById('os').innerHTML = bowser.osname + ' ' + bowser.osversion
 
-document.getElementById('browser').innerHTML = bowser.name + ' ' + bowser.version + ' (' + navigator.language + ') on ' + bowser.osname + ' ' + bowser.osversion;
+document.getElementById('browser').innerHTML = bowser.name + ' ' + bowser.version;
 document.getElementById('agent').innerHTML = navigator.userAgent;
 var size = {
   width: window.innerWidth || document.body.clientWidth,
@@ -140,5 +113,9 @@ var view = {
   colorDepth: window.screen.colorDepth
 }
 
-document.getElementById('screen').innerHTML = view.width + 'x' + view.height + ' ' + view.colorDepth + 'bit color';
+document.getElementById('screen').innerHTML = view.width + ' x ' + view.height;
+document.getElementById('color').innerHTML = view.colorDepth + 'bit';
 document.getElementById('viewport').innerHTML = size.width + ' x ' + size.height;
+document.getElementById('lang').innerHTML = l();
+document.getElementById('uuid').innerHTML = uuid();
+document.getElementById('ref').innerHTML = ref();

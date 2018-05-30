@@ -5,26 +5,32 @@
 	<title>bondarewicz.com</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
-	<!--[if lte IE 8]><script src="assets/js/ie/html5shiv.js"></script><![endif]-->
 	<link rel="stylesheet" href="style.css" />
 	<link rel="stylesheet" href="highlight.css">
 </head>
 
 <body>
 	<pre><code class="js">/**
-  * Hi, I'm Łukasz (/ˈwu.kaʂ/), web developer	
+  * @privacy    I don’t collect, sell or distribute any of below info, 
+  *	        it's only for demonstration purposes.
   *
-  * Your browser info
+  * @uuid       <span id="uuid"></span>
+  * @ref        <span id="ref"></span>
   *
-  * @ip 	<span id="ipv4"></span>
+  * @ipv4 	<span id="ipv4"></span>
+  * @ipv6 	<span id="ipv6"></span>
+  * 
   * @browser 	<span id="browser"></span>
+  * @os 	<span id="os"></span>
+  * @lang 	<span id="lang"></span>
   * @screen 	<span id="screen"></span>
+  * @color 	<span id="color"></span>
   * @viewport 	<span id="viewport"></span>
   * @agent 	<span id="agent"></span>
+  *
   */
 
-const code = true;
-
+// Hi, I'm Łukasz, web developer.
 import { <a href="#" id="mail">mail</a >, <a href="https://twitter.com/bondarewicz" id="mail">twitter</a>, <a href="https://github.com/bondarewicz" id="mail">github</a> } from "interwebs";
 
 let skills = [
@@ -62,23 +68,8 @@ let interests = [
   'microservices',
   'rest api'
 ];
-
-/**
- * @TODO try typing or tap below:
- * 
- * <a href="#" onclick="generateUuid()">uuid - universally unique identifier</a>
- * <a href="#" onclick="generateRef()">ref - random 20 char string</a>
- * <a href="#" onclick="alert(ip())">ip - ipv4 & ipv6</a>
- * <a href="#" onclick="alert(ua())">ua - user agent</a>
- * <a href="#" onclick="alert(b())">b - browser info</a>
- * <a href="#" onclick="alert(l())">l - browsr languages</a>
- * <a href="#" onclick="alert(s())">s - screen & viewport info</a>
- */
-
-
 </code></pre>
 	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/bowser/1.9.3/bowser.min.js"></script>
-	<script type="text/javascript" src="//cdn.rawgit.com/namuol/cheet.js/master/cheet.min.js"></script>
 	<script type="text/javascript" src="https://www.l2.io/ip.js?var=ipv4"></script>
 	<script type="text/javascript" src="https://l2.io/ip.js?var=ipv6"></script>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
