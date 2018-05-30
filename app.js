@@ -11,22 +11,22 @@ function uuid() {
 function generateUuid() {
   if (window.confirm(uuid() + "\nregenerate?")) 
     generateUuid();
-  }
+}
 
 function ref() {
   var ref = "";
   var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-  for (var i = 0; i < 20; i++) {
+  for (var i = 0; i < 36; i++) {
     ref += possible.charAt(Math.floor(Math.random() * possible.length));
   }
   return ref;
 }
 
 function generateRef() {
-  if (window.confirm(ref() + "\nregenerate?")) 
+  if (window.confirm(ref() + "\nregenerate?"))
     generateRef();
-  }
+}
 
 function ip() {
   return ipv4 + '\n' + ipv6;
