@@ -11,38 +11,68 @@
 
 <body>
 	<pre><code class="js">/**
- * @privacy     Below is not collected, sold or distributed. 
- * @policy      it's only for demonstration purposes.
+ * @homepage    bondarewicz.com <a href="javascript:startSpeech()" title="allow microphone access to test speech recognition... click...">💬</a><span class="words hljs-comment"></span>
+ * @version     <span id="sha"></span>
+ *
+ * @greeting  	<span id="greeting"></span>
+ * @privacy     Below is not collected, analysed, sold or distributed. 
+ * @policy      This site is only for demonstration purposes.
+ *  
+ * @time        <span id="time"></span> <span id="week"></span>
+ * @date        <span id="date"></span> 
  *
  * @uuid        <span id="uuid"></span>
  * @ref         <span id="ref"></span>
+ * @name        <span id="haiku"></span>
+ * @sprint      <span id="sprint"></span>
+ * @hex         <span id="hex"></span>
  *
  * @ipv4 	<span id="ipv4"></span>
  * @ipv6 	<span id="ipv6"></span>
+ * @isp 	<span id="isp"></span>
+ * @hostname 	<span id="hostname"></span>
  * 
  * @browser 	<span id="browser"></span>
  * @os 	        <span id="os"></span>
  * @lang 	<span id="lang"></span>
+ * @agent 	<span id="agent"></span>
+ *
  * @screen 	<span id="screen"></span>
  * @color 	<span id="color"></span>
  * @viewport 	<span id="viewport"></span>
- * @agent 	<span id="agent"></span>
- *
+ * @pointer     <span id="pointer"></span><span id="clicks"></span>
+ * 
+ * @location    <span id="location"><a href="javascript:getLocation()">👀</a></span>
+ * @address     <span id="address"><a href="javascript:getAddress()">👀</a></span>
+ * @direction   <span id="direction"></span>
+ * @speed       <span id="speed"></span>
  */
 
-// Hi, I'm Łukasz, web developer.
-import { <a href="#" id="mail">mail</a >, <a href="https://twitter.com/bondarewicz" id="mail">twitter</a>, <a href="https://github.com/bondarewicz" id="mail">github</a> } from "interwebs";
+import { 
+  <a href="#" id="mail">mail</a >, 
+  <a href="#" id="twitter">twitter</a>, 
+  <a href="#" id="github">github</a> 
+} from "interwebs.bondarewicz.com";
 
 let skills = [
   'html',
-  'css',
+  'css', 
   'sass',
-  'es5',
+  'es5', 
   'es6',
   'node',
+  'npm', 
+  'yarn',
   'git',
   'babel',
-  'rabbitmq'
+  'webpack',
+  'jest',
+  'jasmine',
+  'karma',
+  'protractor',
+  'istanbul',
+  'gulp',
+  'teamcity'
 ];
 
 let clouds = ['azure', 'gcp', 'rackspace'];
@@ -51,10 +81,8 @@ let recent = [
   'express-js',
   'react',
   'redux',
-  'npm',
   'docker',
-  'kubectl',
-  'hashicorp'
+  'kubectl'
 ];
 
 let interests = [
@@ -70,8 +98,6 @@ let interests = [
 ];
 </code></pre>
 	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/bowser/1.9.3/bowser.min.js"></script>
-	<script type="text/javascript" src="https://www.l2.io/ip.js?var=ipv4"></script>
-	<script type="text/javascript" src="https://l2.io/ip.js?var=ipv6"></script>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 	<script>document.write("<script type='text/javascript' src='app.js?ref=" + Date.now() + "'><\/script>");</script>
 	<script>

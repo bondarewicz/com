@@ -8,9 +8,9 @@
     "url": "https://github.com/bondarewicz/com.git"
   },
   "devDependencies": {
-    "http-server": "^0.11.1"
+    "browser-sync": "^2.12.5"
   },
   "scripts": {
-    "start": "http-server -o"
+    "start" : "browser-sync start --port 3000 --server --files '*.css, *.html, *.js' --https"
   }
 }
