@@ -146,7 +146,7 @@ window.onload = function() {
     .then(data => data.json())
     .then(data => {
       console.timeEnd('fetching github');
-      document.getElementById('sha').innerHTML = '<span class="hljs-comment">'+data[0].sha+'</span>';
+      document.getElementById('sha').innerHTML = '<a href="'+data[0].html_url+'"><span class="hljs-comment">'+(data[0].sha).substr(0, 7)+'</span></a>';
     });
   
   console.time('fetching ipify');
