@@ -1,119 +1,3 @@
-function uuid() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    let r = Math.random() * 16 | 0,
-      v = c == 'x'
-        ? r
-        : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-}
-
-function generateUuid() {
-  if (window.confirm(uuid() + "\nregenerate?")) 
-    generateUuid();
-}
-
-function ref() {
-  var ref = "";
-  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-  for (var i = 0; i < 36; i++) {
-    ref += possible.charAt(Math.floor(Math.random() * possible.length));
-  }
-  return ref;
-}
-
-function generateRef() {
-  if (window.confirm(ref() + "\nregenerate?"))
-    generateRef();
-}
-
-function ip() {
-  return ipv4 + '\n' + ipv6;
-}
-
-function ua() {
-  return navigator.userAgent;
-}
-
-function b() {
-  return bowser.name + ' ' + bowser.version + ' on ' + bowser.osname + ' ' + bowser.osversion;
-}
-
-function l() {
-  return navigator.languages;
-}
-
-function s() {
-  var size = {
-    width: window.innerWidth || document.body.clientWidth,
-    height: window.innerHeight || document.body.clientHeight
-  };
-  return 'Screen: ' + window.screen.width + 'x' + window.screen.height + ' ' + window.screen.colorDepth + 'bit color \nBrowser: ' + size.width + 'x' + size.height;
-}
-
-function haiku() {
-  const adjs = [
-    "autumn", "hidden", "bitter", "misty", "silent", "empty", "dry", "dark",
-    "summer", "icy", "delicate", "quiet", "white", "cool", "spring", "winter",
-    "patient", "twilight", "dawn", "crimson", "wispy", "weathered", "blue",
-    "billowing", "broken", "cold", "damp", "falling", "frosty", "green",
-    "long", "late", "lingering", "bold", "little", "morning", "muddy", "old",
-    "red", "rough", "still", "small", "sparkling", "throbbing", "shy",
-    "wandering", "withered", "wild", "black", "young", "holy", "solitary",
-    "fragrant", "aged", "snowy", "proud", "floral", "restless", "divine",
-    "polished", "ancient", "purple", "lively", "nameless"
-  ];
-  const nouns = [
-    "waterfall", "river", "breeze", "moon", "rain", "wind", "sea", "morning",
-    "snow", "lake", "sunset", "pine", "shadow", "leaf", "dawn", "glitter",
-    "forest", "hill", "cloud", "meadow", "sun", "glade", "bird", "brook",
-    "butterfly", "bush", "dew", "dust", "field", "fire", "flower", "firefly",
-    "feather", "grass", "haze", "mountain", "night", "pond", "darkness",
-    "snowflake", "silence", "sound", "sky", "shape", "surf", "thunder",
-    "violet", "water", "wildflower", "wave", "water", "resonance", "sun",
-    "wood", "dream", "cherry", "tree", "fog", "frost", "voice", "paper",
-    "frog", "smoke", "star"
-  ]
-  let rnd = Math.floor(Math.random()*Math.pow(2,12))
-  return adjs[rnd%64]+'-'+nouns[rnd%64]+'-'+(Math.floor(Math.random() * (9999 - 1000)) + 1000);
-}
-function getWeekNumber(d) {
-    // Copy date so don't modify original
-    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    // Set to nearest Thursday: current date + 4 - current day number
-    // Make Sunday's day number 7
-    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
-    // Get first day of year
-    var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
-    // Calculate full weeks to nearest Thursday
-    var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
-    // Return array of year and week number
-    return [d.getUTCFullYear(), weekNo];
-}
-
-var result = getWeekNumber(new Date());
-
-function ordinal(i) {
-    var j = i % 10,
-        k = i % 100;
-    if (j == 1 && k != 11) {
-        return i + "st";
-    }
-    if (j == 2 && k != 12) {
-        return i + "nd";
-    }
-    if (j == 3 && k != 13) {
-        return i + "rd";
-    }
-    return i + "th";
-}
-
-// document.getElementById('week').innerHTML = '<span class="hljs-comment">'+ordinal(result[1])+' week</span>';
-document.getElementById('sprint').innerHTML = '<span class="hljs-comment">'+result[0]+'W'+result[1]+'</span>';
-const hex = '#'+Math.floor(Math.random()*16777215).toString(16);
-document.getElementById('hex').innerHTML = '<span class="hljs-comment">'+hex+'</span>';
-
 function clock() {
   let time = new Date();
   let hours = time.getHours();
@@ -149,15 +33,55 @@ window.onload = function() {
       document.getElementById('sha').innerHTML = '<a href="'+data[0].html_url+'"><span class="hljs-comment">'+(data[0].sha).substr(0, 7)+'</span></a>';
     });
   
-  console.time('fetching ipify');
-  fetch('https://api.ipify.org/?format=json')
+  console.time('fetching uuid');
+  fetch('https://api-bondarewicz.herokuapp.com/uuid')
     .then(data => data.json())
     .then(data => {
-      console.timeEnd('fetching ipify');
-      document.getElementById('ipv4').innerHTML = '<span class="hljs-comment">'+data.ip+'</span>';
+      console.timeEnd('fetching uuid');
+      document.getElementById('uuid').innerHTML = '<span class="hljs-comment">'+data+'</span>';
     });
   
-  console.time('fetching geoiplookup');
+  console.time('fetching ref');
+  fetch('https://api-bondarewicz.herokuapp.com/ref')
+    .then(data => data.json())
+    .then(data => {
+      console.timeEnd('fetching ref');
+      document.getElementById('ref').innerHTML = '<span class="hljs-comment">'+data+'</span>';
+    });
+    
+  console.time('fetching ip');
+  fetch('https://api-bondarewicz.herokuapp.com/ip')
+    .then(data => data.json())
+    .then(data => {
+      console.timeEnd('fetching ip');
+      document.getElementById('ipv4').innerHTML = '<span class="hljs-comment">'+data+'</span>';
+    });
+  
+  console.time('fetching haiku');
+  fetch('https://api-bondarewicz.herokuapp.com/haiku')
+    .then(data => data.json())
+    .then(data => {
+      console.timeEnd('fetching haiku');
+      document.getElementById('haiku').innerHTML = '<span class="hljs-comment">'+data+'</span>';
+    });
+  
+  console.time('fetching sprint');
+  fetch('https://api-bondarewicz.herokuapp.com/sprint')
+    .then(data => data.json())
+    .then(data => {
+      console.timeEnd('fetching sprint');
+      document.getElementById('sprint').innerHTML = '<span class="hljs-comment">'+data+'</span>';
+    });
+  
+  console.time('fetching hex');
+  fetch('https://api-bondarewicz.herokuapp.com/hex')
+    .then(data => data.json())
+    .then(data => {
+      console.timeEnd('fetching hex');
+      document.getElementById('hex').innerHTML = '<span class="hljs-comment">'+data+'</span>';
+    });
+  
+  console.time('fetching isp');
   fetch('https://json.geoiplookup.io/')
     .then(data => data.json())
     .then(data => {
@@ -166,8 +90,6 @@ window.onload = function() {
       document.getElementById('ipv6').innerHTML = '<span class="hljs-comment">'+data.ip+'</span>';
       document.getElementById('hostname').innerHTML = '<span class="hljs-comment">'+data.hostname+'</span>';
     });
-  
-  document.getElementById('haiku').innerHTML = '<span class="hljs-comment">'+ haiku()+'</span>';
   
   // @see http://www.jottings.com/obfuscator/
   coded = "WBR1JkySteI@flJtq.eBl"
@@ -380,5 +302,4 @@ document.getElementById('screen').innerHTML = view.width + ' x ' + view.height;
 document.getElementById('color').innerHTML = view.colorDepth + 'bit';
 document.getElementById('viewport').innerHTML = size.width + ' x ' + size.height;
 document.getElementById('lang').innerHTML = l();
-document.getElementById('uuid').innerHTML = uuid();
-document.getElementById('ref').innerHTML = ref();
+
