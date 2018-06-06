@@ -81,7 +81,7 @@ window.onload = function() {
       document.getElementById('hex').innerHTML = '<span class="hljs-comment">'+data+'</span>';
     });
   
-  console.time('fetching isp');
+  console.time('fetching geoiplookup');
   fetch('https://json.geoiplookup.io/')
     .then(data => data.json())
     .then(data => {
