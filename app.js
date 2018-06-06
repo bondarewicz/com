@@ -301,5 +301,5 @@ var view = {
 document.getElementById('screen').innerHTML = view.width + ' x ' + view.height;
 document.getElementById('color').innerHTML = view.colorDepth + 'bit';
 document.getElementById('viewport').innerHTML = size.width + ' x ' + size.height;
-document.getElementById('lang').innerHTML = l();
+document.getElementById('lang').innerHTML = navigator.languages;
 
