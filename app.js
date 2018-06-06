@@ -34,7 +34,7 @@ window.onload = function() {
     });
   
   console.time('fetching uuid');
-  fetch('https://api-bondarewicz.herokuapp.com/uuid')
+  fetch('https://api.bondarewicz.com/uuid')
     .then(data => data.json())
     .then(data => {
       console.timeEnd('fetching uuid');
@@ -42,7 +42,7 @@ window.onload = function() {
     });
   
   console.time('fetching ref');
-  fetch('https://api-bondarewicz.herokuapp.com/ref')
+  fetch('https://api.bondarewicz.com/ref')
     .then(data => data.json())
     .then(data => {
       console.timeEnd('fetching ref');
@@ -50,15 +50,15 @@ window.onload = function() {
     });
     
   console.time('fetching ip');
-  fetch('https://api-bondarewicz.herokuapp.com/ip')
+  fetch('https://api.bondarewicz.com/ip')
     .then(data => data.json())
     .then(data => {
       console.timeEnd('fetching ip');
-      document.getElementById('ipv4').innerHTML = '<span class="hljs-comment">'+data+'</span>';
+      document.getElementById('ip').innerHTML = '<span class="hljs-comment">'+data+'</span>';
     });
   
   console.time('fetching haiku');
-  fetch('https://api-bondarewicz.herokuapp.com/haiku')
+  fetch('https://api.bondarewicz.com/haiku')
     .then(data => data.json())
     .then(data => {
       console.timeEnd('fetching haiku');
@@ -66,7 +66,7 @@ window.onload = function() {
     });
   
   console.time('fetching sprint');
-  fetch('https://api-bondarewicz.herokuapp.com/sprint')
+  fetch('https://api.bondarewicz.com/sprint')
     .then(data => data.json())
     .then(data => {
       console.timeEnd('fetching sprint');
@@ -74,7 +74,7 @@ window.onload = function() {
     });
   
   console.time('fetching hex');
-  fetch('https://api-bondarewicz.herokuapp.com/hex')
+  fetch('https://api.bondarewicz.com/hex')
     .then(data => data.json())
     .then(data => {
       console.timeEnd('fetching hex');
