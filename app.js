@@ -34,7 +34,7 @@ window.onload = function() {
     });
   
   console.time('fetching uuid');
-  fetch('https://api.bondarewicz.com/uuid')
+  fetch('https://api.bondarewicz.com/v1/uuid')
     .then(data => data.json())
     .then(data => {
       console.timeEnd('fetching uuid');
@@ -42,7 +42,7 @@ window.onload = function() {
     });
   
   console.time('fetching ref');
-  fetch('https://api.bondarewicz.com/ref')
+  fetch('https://api.bondarewicz.com/v1/ref')
     .then(data => data.json())
     .then(data => {
       console.timeEnd('fetching ref');
@@ -50,15 +50,15 @@ window.onload = function() {
     });
     
   console.time('fetching ip');
-  fetch('https://api.bondarewicz.com/ip')
+  fetch('https://api.bondarewicz.com/v1/ip')
     .then(data => data.json())
     .then(data => {
       console.timeEnd('fetching ip');
-      document.getElementById('ip').innerHTML = '<span class="hljs-comment">'+data+'</span>';
+      document.getElementById('ipv4').innerHTML = '<span class="hljs-comment">'+data+'</span>';
     });
   
   console.time('fetching haiku');
-  fetch('https://api.bondarewicz.com/haiku')
+  fetch('https://api.bondarewicz.com/v1/haiku')
     .then(data => data.json())
     .then(data => {
       console.timeEnd('fetching haiku');
@@ -66,18 +66,18 @@ window.onload = function() {
     });
   
   console.time('fetching sprint');
-  fetch('https://api.bondarewicz.com/sprint')
+  fetch('https://api.bondarewicz.com/v1/sprint')
     .then(data => data.json())
     .then(data => {
       console.timeEnd('fetching sprint');
       document.getElementById('sprint').innerHTML = '<span class="hljs-comment">'+data+'</span>';
     });
   
-  console.time('fetching hex');
-  fetch('https://api.bondarewicz.com/hex')
+  console.time('fetching color');
+  fetch('https://api.bondarewicz.com/v1/color')
     .then(data => data.json())
     .then(data => {
-      console.timeEnd('fetching hex');
+      console.timeEnd('fetching color');
       document.getElementById('hex').innerHTML = '<span class="hljs-comment">'+data+'</span>';
     });
   
@@ -145,36 +145,6 @@ window.ontouchmove = function() {
   return false;
 }
 
-
-function startSpeech() {
-  window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-  const recognition = new SpeechRecognition();
-  recognition.interimResults = true;
-
-  let p = document.createElement('p');
-  const words = document.querySelector('.words');
-  words.appendChild(p);
-
-  recognition.addEventListener('result', e => {
-    const transcript = Array.from(e.results)
-      .map(result => result[0])
-      .map(result => result.transcript)
-      .join('')
-
-      const poopScript = transcript.replace(/poop|poo|shit|dump/gi, '💩');
-      p.textContent = poopScript;
-
-      if (e.results[0].isFinal) {
-        p = document.createElement('p');
-        words.appendChild(p);
-      }
-  });
-
-  recognition.addEventListener('end', recognition.start);
-  recognition.start();
-}
-
 function getAddress() {
   if ("geolocation" in navigator) {
     navigator.geolocation.getCurrentPosition(function(position) {
@@ -198,8 +168,10 @@ function getAddress() {
 
 function getLocation() {
   if ("geolocation" in navigator) {
+    console.time('geolocation');
     navigator.geolocation.watchPosition(function(position) {
       
+      console.timeEnd('geolocation');
       // best to test in Simulator.app (macOS)
       function degToCompass(num){
         const val =  Math.floor((num / 22.5) + 0.5);
