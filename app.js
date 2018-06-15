@@ -8,10 +8,10 @@ function clock() {
   document.getElementById('date').innerHTML = '<span class="hljs-comment">' + time.toISOString().substr(0, 10) + '</span>';
   
   // Array of day names
-var dayNames = new Array("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday");
+let dayNames = new Array("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday");
 
 // document.write("Happy " + dayNames[now.getDay()] + ".");
-document.getElementById('greeting').innerHTML = '<span class="hljs-comment">Happy '+dayNames[time.getDay()] + '.</span>';
+document.getElementById('greeting').innerHTML = '<span class="hljs-comment">Happy '+dayNames[time.getDay()] + ' 👍 </span>';
 
 
   function harold(standIn) {
@@ -26,11 +26,11 @@ setInterval(clock, 200);
 window.onload = function() {
   
   console.time('fetching github');
-  fetch('https://api.github.com/repos/bondarewicz/com/commits')
+  fetch('https://api.bondarewicz.com/v1/version')
     .then(data => data.json())
     .then(data => {
       console.timeEnd('fetching github');
-      document.getElementById('sha').innerHTML = '<a href="'+data[0].html_url+'"><span class="hljs-comment">'+(data[0].sha).substr(0, 7)+'</span></a>';
+      document.getElementById('sha').innerHTML = '<a href="'+data.url+'"><span class="hljs-comment">'+data.sha+'</span></a>';
     });
   
   console.time('fetching uuid');
@@ -78,7 +78,17 @@ window.onload = function() {
     .then(data => data.json())
     .then(data => {
       console.timeEnd('fetching color');
-      document.getElementById('hex').innerHTML = '<span class="hljs-comment">'+data+'</span>';
+      document.getElementById('hex').innerHTML = '<span>'+data+'</span>';
+      document.getElementById('hex').style.color = data;
+      
+      let bigint = parseInt(data.replace('#',''), 16);
+      let r = (bigint >> 16) & 255;
+      let g = (bigint >> 8) & 255;
+      let b = bigint & 255;
+
+      let rgb = 'rgb(' + r + ',' + g + ',' + b +')';
+      document.getElementById('rgb').innerHTML = '<span style="width: 10px; height:10px; background:'+data+'">&nbsp;</span>' + ' <span>' + rgb + '</span>';
+      document.getElementById('rgb').style.color = data;
     });
   
   console.time('fetching geoiplookup');

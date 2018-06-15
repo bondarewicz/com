@@ -10,6 +10,18 @@ a, a:hover, a:focus, a:visited, a:active {
   text-decoration: none;
 }
 
+.cursor {
+  overflow: hidden;
+  border-right: 2px solid #75715e;
+  margin: 0 auto;
+  animation: blink-caret .85s step-end infinite;
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent }
+  50% { border-color: #75715e; }
+}
+
 @media screen and (max-width: 1680px) {
   body {
     font-size: 24px;
