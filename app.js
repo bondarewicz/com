@@ -73,6 +73,14 @@ window.onload = function() {
       document.getElementById('sprint').innerHTML = '<span class="hljs-comment">'+data+'</span>';
     });
   
+  console.time('fetching contributions');
+  fetch('https://api.bondarewicz.com/v1/contributions')
+    .then(data => data.json())
+    .then(data => {
+      console.timeEnd('fetching contributions');
+      document.getElementById('contributions').innerHTML = '<span class="hljs-comment">'+data+'</span>';
+    });
+  
   console.time('fetching color');
   fetch('https://api.bondarewicz.com/v1/color')
     .then(data => data.json())
