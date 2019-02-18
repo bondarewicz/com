@@ -1,7 +1,7 @@
 {
-  "name": "ParcelVision.Cherry",
+  "name": "bondarewicz.com",
   "homepage": "https://bondarewicz.com",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "repository": {
     "type": "git",
@@ -11,6 +11,6 @@
     "browser-sync": "^2.12.5"
   },
   "scripts": {
-    "start" : "browser-sync start --port 3000 --server --files '*.css, *.html, *.js' --https"
+    "start" : "browser-sync start --port 3000 --server --files '*.css, *.html, *.js'"
   }
 }
