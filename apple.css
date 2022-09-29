@@ -1,0 +1,88 @@
+@font-face {
+  font-family: 'Chicago Plain';
+  font-style: normal;
+  font-weight: normal;
+  src: local('Chicago Plain'), url('Chicago.woff') format('woff');
+}
+
+body {
+  font-family: 'Chicago Plain';
+}
+
+window-pane {
+  font-family: 'Chicago Plain' !important;
+}
+
+ul[role] {
+  cursor: pointer;
+  font-size: 1.4em;
+}
+
+.cursor {
+  overflow: hidden;
+  border-right: 2px solid #75715e;
+  margin: 0 auto;
+  animation: blink-caret .85s step-end infinite;
+}
+
+@keyframes blink-caret {
+
+  from,
+  to {
+    border-color: transparent
+  }
+
+  50% {
+    border-color: #75715e;
+  }
+}
+
+.crt-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url(images/lines.jpg);
+  background-size: auto;
+  z-index: 10;
+  background-size: 7px auto;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  opacity: 0.4;
+  animation: moveDownAnimation 150s linear infinite;
+}
+
+.glitch {
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  position: relative;
+  width: 900px;
+  /*   margin:0 auto; */
+}
+
+
+.vignette {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url(images/vignette.png);
+  background-size: auto;
+  z-index: 11;
+  background-size: 100% 100%;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.darken {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.3);
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}

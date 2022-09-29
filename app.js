@@ -3,15 +3,13 @@ function clock() {
   let hours = time.getHours();
   let minutes = time.getMinutes();
   let seconds = time.getSeconds();
-  
-  document.getElementById('time').innerHTML = '<span class="hljs-comment">'+harold(hours) + ":" + harold(minutes) + ":" + harold(seconds)+'</span>';
-  document.getElementById('date').innerHTML = '<span class="hljs-comment">' + time.toISOString().substr(0, 10) + '</span>';
-  
-  // Array of day names
-let dayNames = new Array("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday");
 
-// document.write("Happy " + dayNames[now.getDay()] + ".");
-document.getElementById('greeting').innerHTML = '<span class="hljs-comment">Happy '+dayNames[time.getDay()] + ' 👍 </span>';
+  document.getElementById('time').innerHTML = harold(hours) + ":" + harold(minutes) + ":" + harold(seconds);
+  document.getElementById('date').innerHTML = time.toISOString().substr(0, 10);
+
+  let dayNames = new Array("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
+
+  document.getElementById('greeting').innerHTML = 'Happy ' + dayNames[time.getDay()] + ' :)';
 
 
   function harold(standIn) {
@@ -23,84 +21,25 @@ document.getElementById('greeting').innerHTML = '<span class="hljs-comment">Happ
 }
 setInterval(clock, 200);
 
-window.onload = function() {
-  
-  console.time('fetching github');
+window.onload = function () {
+
+  console.time('fetching version');
   fetch('https://api.bondarewicz.com/v1/version')
     .then(data => data.json())
     .then(data => {
-      console.timeEnd('fetching github');
-      document.getElementById('sha').innerHTML = '<a href="'+data.url+'"><span class="hljs-comment">'+data.sha+'</span></a>';
+      console.timeEnd('fetching version');
+      document.getElementById('sha').innerHTML = '<a href="' + data.url + '">v.' + data.sha + '</a>';
     });
-  
-  console.time('fetching uuid');
-  fetch('https://api.bondarewicz.com/v1/uuid')
-    .then(data => data.json())
-    .then(data => {
-      console.timeEnd('fetching uuid');
-      document.getElementById('uuid').innerHTML = '<span class="hljs-comment">'+data+'</span>';
-    });
-  
-  console.time('fetching ref');
-  fetch('https://api.bondarewicz.com/v1/ref')
-    .then(data => data.json())
-    .then(data => {
-      console.timeEnd('fetching ref');
-      document.getElementById('ref').innerHTML = '<span class="hljs-comment">'+data+'</span>';
-    });
-    
-  console.time('fetching ip');
-  fetch('https://api.bondarewicz.com/v1/ip')
-    .then(data => data.json())
-    .then(data => {
-      console.timeEnd('fetching ip');
-      document.getElementById('ipv4').innerHTML = '<span class="hljs-comment">'+data+'</span>';
-    });
-  
-  console.time('fetching haiku');
-  fetch('https://api.bondarewicz.com/v1/haiku')
-    .then(data => data.json())
-    .then(data => {
-      console.timeEnd('fetching haiku');
-      document.getElementById('haiku').innerHTML = '<span class="hljs-comment">'+data+'</span>';
-    });
-  
-  console.time('fetching sprint');
-  fetch('https://api.bondarewicz.com/v1/sprint')
-    .then(data => data.json())
-    .then(data => {
-      console.timeEnd('fetching sprint');
-      document.getElementById('sprint').innerHTML = '<span class="hljs-comment">'+data+'</span>';
-    });
-  
-  console.time('fetching color');
-  fetch('https://api.bondarewicz.com/v1/color')
-    .then(data => data.json())
-    .then(data => {
-      console.timeEnd('fetching color');
-      document.getElementById('hex').innerHTML = '<span>'+data+'</span>';
-      document.getElementById('hex').style.color = data;
-      
-      let bigint = parseInt(data.replace('#',''), 16);
-      let r = (bigint >> 16) & 255;
-      let g = (bigint >> 8) & 255;
-      let b = bigint & 255;
 
-      let rgb = 'rgb(' + r + ',' + g + ',' + b +')';
-      document.getElementById('rgb').innerHTML = '<span style="width: 10px; height:10px; background:'+data+'">&nbsp;</span>' + ' <span>' + rgb + '</span>';
-      document.getElementById('rgb').style.color = data;
-    });
-  
   console.time('fetching geoiplookup');
   fetch('https://json.geoiplookup.io/')
     .then(data => data.json())
     .then(data => {
       console.timeEnd('fetching geoiplookup');
-      document.getElementById('isp').innerHTML = '<span class="hljs-comment">'+data.isp+'</span>';
-      document.getElementById('ipv6').innerHTML = '<span class="hljs-comment">'+data.ip+'</span>';
-      document.getElementById('hostname').innerHTML = '<span class="hljs-comment">'+data.hostname+'</span>';
+      document.getElementById('isp').innerHTML = data.org;
+      document.getElementById('ipv6').innerHTML = data.ip;
     });
-  
+
   // @see http://www.jottings.com/obfuscator/
   coded = "WBR1JkySteI@flJtq.eBl"
   key = "Cfezn3o7Q80GKwslNk1ZLOAyIR9BhEVabXSjqY2iTugcp6H4P5DxJWUMmvrdtF"
@@ -115,53 +54,53 @@ window.onload = function() {
       mailto += (key.charAt(ltr))
     }
   }
-  
+
   coded = "fCCP8://C1FCC4b.ZMT/rM26xb41FZI"
   key = "6HPsXUkKF549NEbxCuMRfqB7v1mzS2ZdQp8AWOjile0gGratYoDhyJVLwTI3nc"
-  shift=coded.length
-  twitter=""
-  for (i=0; i<coded.length; i++) {
-    if (key.indexOf(coded.charAt(i))==-1) {
+  shift = coded.length
+  twitter = ""
+  for (i = 0; i < coded.length; i++) {
+    if (key.indexOf(coded.charAt(i)) == -1) {
       ltr = coded.charAt(i)
       twitter += (ltr)
     }
-    else {     
-      ltr = (key.indexOf(coded.charAt(i))-shift+key.length) % key.length
+    else {
+      ltr = (key.indexOf(coded.charAt(i)) - shift + key.length) % key.length
       twitter += (key.charAt(ltr))
     }
   }
-  
+
   coded = "PxxsW://wrxP78.qGc/8GUy9g2trqS"
   key = "gkid7qSmMW9pFeT4lvKoNZCP8RLUxjw1ry63uczIDsa2EBVQOG0fXAYhbHJnt5"
-  shift=coded.length
-  github=""
-  for (i=0; i<coded.length; i++) {
-    if (key.indexOf(coded.charAt(i))==-1) {
+  shift = coded.length
+  github = ""
+  for (i = 0; i < coded.length; i++) {
+    if (key.indexOf(coded.charAt(i)) == -1) {
       ltr = coded.charAt(i)
       github += (ltr)
     }
-    else {     
-      ltr = (key.indexOf(coded.charAt(i))-shift+key.length) % key.length
+    else {
+      ltr = (key.indexOf(coded.charAt(i)) - shift + key.length) % key.length
       github += (key.charAt(ltr))
     }
   }
 
   document.getElementById("mail").href = "mailto:" + mailto;
-  document.getElementById("twitter").href =  twitter;
-  document.getElementById("github").href =  github;
+  document.getElementById("twitter").href = twitter;
+  document.getElementById("github").href = github;
 }
 
-window.ontouchmove = function() {
+window.ontouchmove = function () {
   return false;
 }
 
 function getAddress() {
   if ("geolocation" in navigator) {
-    navigator.geolocation.getCurrentPosition(function(position) {
-      
-      var url = 'https://nominatim.openstreetmap.org/reverse?format=json&lat='+position.coords.latitude+'&lon='+position.coords.longitude+'&addressdetails=1';
+    navigator.geolocation.getCurrentPosition(function (position) {
+
+      var url = 'https://nominatim.openstreetmap.org/reverse?format=json&lat=' + position.coords.latitude + '&lon=' + position.coords.longitude + '&addressdetails=1';
       var address = '';
-      
+
       console.time('fetching openstreetmap');
       fetch(url)
         .then(data => data.json())
@@ -170,7 +109,7 @@ function getAddress() {
           console.log(data);
           address = data.display_name;
           document.getElementById('address').innerHTML = '';
-          document.getElementById('address').innerHTML = '<span class="hljs-comment">'+address+'</span>';
+          document.getElementById('address').innerHTML = address;
         });
     });
   }
@@ -179,16 +118,16 @@ function getAddress() {
 function getLocation() {
   if ("geolocation" in navigator) {
     console.time('geolocation');
-    navigator.geolocation.watchPosition(function(position) {
-      
+    navigator.geolocation.watchPosition(function (position) {
+
       console.timeEnd('geolocation');
       // best to test in Simulator.app (macOS)
-      function degToCompass(num){
-        const val =  Math.floor((num / 22.5) + 0.5);
-        const arr = ["N","NNE","NE","ENE","E","ESE", "SE", "SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+      function degToCompass(num) {
+        const val = Math.floor((num / 22.5) + 0.5);
+        const arr = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
         return arr[(val % 16)]
       }
-      
+
       // N	   North	          0°
       // NNE	 North-Northeast	22.5°
       // NE	   Northeast	      45°
@@ -205,28 +144,28 @@ function getLocation() {
       // WNW	 West-Northwest	  292.5°
       // NW	   Northwest	      315°
       // NNW	 North-Northwest	337.5°
-      
-      var direction = (position.coords.heading) ? degToCompass(position.coords.heading) +' ['+position.coords.heading+'&deg;] ' : '';
-      var kph = (position.coords.speed) ? (position.coords.speed*3.6).toFixed(2) +'km/h ' : '';
-      var mph = (position.coords.speed) ? (position.coords.speed*2.2369).toFixed(2) +'mph ' : '';
-      var ms = (position.coords.speed) ? (position.coords.speed).toFixed(2) +'m/s ' : '';
-      var speed = kph+' '+mph + ' ' +ms;
-      
+
+      var direction = (position.coords.heading) ? degToCompass(position.coords.heading) + ' [' + position.coords.heading + '&deg;] ' : '';
+      var kph = (position.coords.speed) ? (position.coords.speed * 3.6).toFixed(2) + 'km/h ' : '';
+      var mph = (position.coords.speed) ? (position.coords.speed * 2.2369).toFixed(2) + 'mph ' : '';
+      var ms = (position.coords.speed) ? (position.coords.speed).toFixed(2) + 'm/s ' : '';
+      var speed = kph + ' ' + mph + ' ' + ms;
+
       document.getElementById('location').innerHTML = '';
-      document.getElementById('location').innerHTML = '<span class="hljs-comment">'+position.coords.latitude +' '+position.coords.longitude+'</span>';
-      document.getElementById('direction').innerHTML = '<span class="hljs-comment">'+direction+'</span>';
-      document.getElementById('speed').innerHTML = '<span class="hljs-comment">'+speed+'</span>';
-      
+      document.getElementById('location').innerHTML = position.coords.latitude + ' ' + position.coords.longitude;
+      document.getElementById('direction').innerHTML = direction;
+      document.getElementById('speed').innerHTML = speed;
+
     });
-  }  
+  }
 }
-    
+
 document.addEventListener('mousemove', onMouseUpdate, false);
 document.addEventListener('mouseenter', onMouseUpdate, false);
-    
+
 function onMouseUpdate(event) {
   event = event || window.event; // IE-ism
-  document.getElementById('pointer').innerHTML = '<span class="hljs-comment">'+event.pageX + " x " + event.pageY+'</span>';
+  document.getElementById('pointer').innerHTML = event.pageX + " x " + event.pageY;
 }
 
 document.addEventListener('click', countLeft, false);
@@ -237,18 +176,18 @@ var lc = 0;
 var rc = 0;
 function countLeft() {
   lc++;
-  document.getElementById('clicks').innerHTML = '<span class="hljs-comment"> '+lc+' '+rc+'</span>';
+  document.getElementById('clicks').innerHTML = lc + ' ' + rc;
 }
 function countRight() {
   rc++;
-  document.getElementById('clicks').innerHTML = '<span class="hljs-comment"> '+lc+' '+rc+'</span>';
+  document.getElementById('clicks').innerHTML = lc + ' ' + rc;
 }
 
-window.onorientationchange = function() {
+window.onorientationchange = function () {
   document.body.scrollTop = 0;
 }
 
-window.onresize = function(event) {
+window.onresize = function (event) {
   var size = {
     width: window.innerWidth || document.body.clientWidth,
     height: window.innerHeight || document.body.clientHeight
@@ -260,13 +199,10 @@ window.onresize = function(event) {
     colorDepth: window.screen.colorDepth
   }
 
-  document.getElementById('screen').innerHTML = '<span class="hljs-comment">' + view.width + 'x' + view.height + ' ' + view.colorDepth + 'bit color</span>';
-  document.getElementById('viewport').innerHTML = '<span class="hljs-comment">' + size.width + ' x ' + size.height + '</span>';
+  document.getElementById('viewport').innerHTML = size.width + ' x ' + size.height;
 };
 
-document.getElementById('ipv4').innerHTML = ipv4;
 document.getElementById('os').innerHTML = bowser.osname + ' ' + bowser.osversion
-
 document.getElementById('browser').innerHTML = bowser.name + ' ' + bowser.version;
 document.getElementById('agent').innerHTML = navigator.userAgent;
 var size = {
@@ -280,8 +216,5 @@ var view = {
   colorDepth: window.screen.colorDepth
 }
 
-document.getElementById('screen').innerHTML = view.width + ' x ' + view.height;
-document.getElementById('color').innerHTML = view.colorDepth + 'bit';
 document.getElementById('viewport').innerHTML = size.width + ' x ' + size.height;
-document.getElementById('lang').innerHTML = navigator.languages;
 

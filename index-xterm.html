@@ -7,17 +7,33 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<meta name="flattr:id" content="pdx61z">
 	<link rel="icon" href="favicon.png">
-	<link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
-	<link rel="stylesheet" href="https://unpkg.com/@sakun/system.css" />
-	<link rel="stylesheet" href="apple.css" />
+	<!-- <link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet"> -->
+	<!-- <link rel="stylesheet" href="https://unpkg.com/@sakun/system.css" /> -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/xterm/2.1.0/xterm.css" />
+	<!-- <link rel="stylesheet" href="apple.css" /> -->
 </head>
 
 <body>
+	<div id="terminal"></div>
+
+	<!-- <ul role="menu-bar">
+		<li role="menu-item" tabindex="0" aria-haspopup="true">
+			<span class="apple"></span>
+		</li>
+		<li role="menu-item" tabindex="0" aria-haspopup="true">
+			Links
+			<ul role="menu">
+				<li role="menu-item"><a href="#" id="mail">mail</a></li>
+				<li role="menu-item"><a href="#" id="twitter">twitter</a></li>
+				<li role="menu-item"><a href="#" id="github">github</a></li>
+			</ul>
+		</li>
+	</ul>
 
 	<div class="window">
 		<div class="title-bar">
 			<button aria-label="Close" class="close"></button>
-			<h1 class="title"><span id="sha"></span></h1>
+			<h1 class="title">v.<span id="sha"></span></h1>
 			<button aria-label="Resize" class="resize"></button>
 		</div>
 
@@ -28,7 +44,6 @@
 		</div>
 
 		<div class="window-pane">
-			<br/><br/>
 			<span class="cursor">Hello World, I’m Łukasz, web developer. </span>
 		</div>
 
@@ -67,12 +82,22 @@
 				<b>speed:</b> <span id="speed"></span><br />
 			</p>
 		</div>
-      
-	</div>
 
+		
+      
+	</div> -->
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/xterm/2.1.0/xterm.js" integrity="sha512-A6FNRl13AM1Okt8tljW0GEzvugx6bW9R1zkN0FR/ayeGQkIsd/u41GeGJndAWVy48zhat9pbZCLKbOHaWqMOFQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<script>
+        var term = new Terminal();
+        term.open(document.getElementById('terminal'));
+        term.write('Hello world $ ')
+      </script>
 	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/bowser/1.9.3/bowser.min.js"></script>
+	<!-- <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script> -->
 	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/bowser/1.9.3/bowser.min.js"></script>
-	<script>document.write("<script type='text/javascript' src='app.js?ref=" + Date.now() + "'><\/script>");</script>
+	
+	<!-- <script>document.write("<script type='text/javascript' src='app.js?ref=" + Date.now() + "'><\/script>");</script> -->
 </body>
 
 </html>
