@@ -41,6 +41,7 @@ window.onload = function () {
     });
 
   // @see http://www.jottings.com/obfuscator/
+  // https://dimentech.com/assets/obfuscator.html
   coded = "WBR1JkySteI@flJtq.eBl"
   key = "Cfezn3o7Q80GKwslNk1ZLOAyIR9BhEVabXSjqY2iTugcp6H4P5DxJWUMmvrdtF"
   shift = coded.length
