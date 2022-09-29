@@ -85,9 +85,25 @@ window.onload = function () {
     }
   }
 
+  coded = "fNNBd://JJJ.EzQPgSzQ.kxT/zQ/yxQSo2gJzka/"
+  key = "mfxK2Szue7n1A5pV9bcNlvJhoHrdiW06I8ZRP3UOTtXYwCa4gsQLDFBjGykqEM"
+  shift=coded.length
+  linkedin=""
+  for (i=0; i<coded.length; i++) {
+    if (key.indexOf(coded.charAt(i))==-1) {
+      ltr = coded.charAt(i)
+      linkedin += (ltr)
+    }
+    else {     
+      ltr = (key.indexOf(coded.charAt(i))-shift+key.length) % key.length
+      linkedin += (key.charAt(ltr))
+    }
+  }
+
   document.getElementById("mail").href = "mailto:" + mailto;
   document.getElementById("twitter").href = twitter;
   document.getElementById("github").href = github;
+  document.getElementById("linkedin").href = linkedin;
 }
 
 window.ontouchmove = function () {
