@@ -1,16 +1,29 @@
 {
   "name": "bondarewicz.com",
   "homepage": "https://bondarewicz.com",
-  "version": "0.0.1",
   "private": true,
+  "version": "0.1.0",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/bondarewicz/com.git"
   },
-  "devDependencies": {
-    "browser-sync": "^2.12.5"
-  },
   "scripts": {
-    "start": "browser-sync start --port 3000 --server --files '*.css, *.html, *.js'"
+    "predev": "node scripts/write-version.mjs",
+    "dev": "vite",
+    "prebuild": "node scripts/write-version.mjs",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@react-three/drei": "^9.114.0",
+    "@react-three/fiber": "^8.17.10",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "^0.169.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.3",
+    "vite": "^5.4.10"
   }
 }
