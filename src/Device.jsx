@@ -216,7 +216,7 @@ function runCommand(raw) {
 }
 
 /* ───── The CRT screen ──────────────────────────────────────── */
-function Screen({ width, height, boot, lines, input }) {
+function Screen({ width, height, boot, lines, input, hint }) {
   const flickerRef = useRef()
   const cursorRef  = useRef()
   const sweepRef   = useRef()
@@ -387,6 +387,21 @@ function Screen({ width, height, boot, lines, input }) {
             <planeGeometry args={[charW * 0.8, fontSize * 0.9]} />
             <meshBasicMaterial color={PHOSPHOR} transparent opacity={contentOpacity * 0.85} />
           </mesh>
+
+          {hint && (
+            <Text
+              position={[padX, promptY - lineHeight - 0.01, 0.003]}
+              fontSize={fontSize * 0.75}
+              font={MONO_FONT}
+              color={PHOSPHOR}
+              anchorX="left"
+              anchorY="top"
+              letterSpacing={0.015}
+              fillOpacity={contentOpacity * 0.55}
+            >
+              [tap screen to type]
+            </Text>
+          )}
         </group>
       )}
 
@@ -474,6 +489,12 @@ export default function Device() {
     return () => { cancelled = true }
   }, [])
   const [input, setInput] = useState('')
+  const inputRef = useRef(null)
+  const [focused, setFocused] = useState(false)
+  const isTouch = useMemo(() => {
+    if (typeof window === 'undefined') return false
+    return window.matchMedia?.('(pointer: coarse)').matches ?? 'ontouchstart' in window
+  }, [])
 
   const powered = powerState === 'on' || powerState === 'booting'
 
@@ -578,6 +599,121 @@ export default function Device() {
     return () => window.removeEventListener('keydown', onKey)
   }, [powerState, input, setPower])
 
+  // Shared command runner used by the touch (soft-keyboard) path
+  const submit = useCallback((entered) => {
+    const res = runCommand(entered)
+    if (res.clear) { setLines([]); return }
+    if (res.powerOff) {
+      setLines((prev) => [...prev, `$ ${entered}`, 'shutting down...'])
+      setTimeout(() => setPower('off'), 0)
+      return
+    }
+    if (res.async) {
+      const marker = `__pending_${Date.now()}_${Math.random().toString(36).slice(2, 6)}__`
+      setLines((prev) => [...prev, `$ ${entered}`, marker])
+      fetchLines(res.async.url, res.async.format).then((out) => {
+        setLines((prev) => {
+          const idx = prev.indexOf(marker)
+          if (idx === -1) return [...prev, ...out]
+          return [...prev.slice(0, idx), ...out, ...prev.slice(idx + 1)]
+        })
+      })
+      return
+    }
+    setLines((prev) => res.lines?.length
+      ? [...prev, `$ ${entered}`, ...res.lines]
+      : [...prev, `$ ${entered}`])
+  }, [setPower])
+
+  // Live handler refs so the imperative DOM input always sees latest state
+  const touchHandlersRef = useRef({})
+  touchHandlersRef.current.onInput = (e) => {
+    if (powerState !== 'on') return
+    const v = e.target.value
+    setInput(v.length > 48 ? v.slice(0, 48) : v)
+  }
+  touchHandlersRef.current.onKeyDown = (e) => {
+    if (powerState !== 'on') return
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      const entered = inputRef.current?.value ?? ''
+      setInput('')
+      if (inputRef.current) inputRef.current.value = ''
+      submit(entered)
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      setInput('')
+      if (inputRef.current) inputRef.current.value = ''
+    }
+  }
+
+  // On touch devices, mount a real <input> on document.body so iOS/Android
+  // can surface the soft keyboard. The input is minimally visible (iOS
+  // refuses to focus inputs that look hidden) but off-screen.
+  useEffect(() => {
+    if (!isTouch || typeof document === 'undefined') return
+    const el = document.createElement('input')
+    el.type = 'text'
+    el.setAttribute('autocomplete', 'off')
+    el.setAttribute('autocorrect', 'off')
+    el.setAttribute('autocapitalize', 'off')
+    el.setAttribute('spellcheck', 'false')
+    el.setAttribute('inputmode', 'text')
+    el.setAttribute('enterkeyhint', 'send')
+    el.setAttribute('aria-label', 'terminal input')
+    Object.assign(el.style, {
+      position: 'fixed',
+      top: '50%',
+      left: '0',
+      width: '1px',
+      height: '1px',
+      fontSize: '16px',
+      opacity: '0.01',
+      color: 'transparent',
+      caretColor: 'transparent',
+      background: 'transparent',
+      border: '0',
+      outline: 'none',
+      padding: '0',
+      margin: '0',
+    })
+    const onInput = (e) => touchHandlersRef.current.onInput?.(e)
+    const onKey = (e) => touchHandlersRef.current.onKeyDown?.(e)
+    const onFocusEvt = () => setFocused(true)
+    const onBlurEvt = () => setFocused(false)
+    el.addEventListener('input', onInput)
+    el.addEventListener('keydown', onKey)
+    el.addEventListener('focus', onFocusEvt)
+    el.addEventListener('blur', onBlurEvt)
+    document.body.appendChild(el)
+    inputRef.current = el
+    return () => {
+      el.removeEventListener('input', onInput)
+      el.removeEventListener('keydown', onKey)
+      el.removeEventListener('focus', onFocusEvt)
+      el.removeEventListener('blur', onBlurEvt)
+      el.remove()
+      inputRef.current = null
+    }
+  }, [isTouch])
+
+  // Native click on the canvas focuses the input. iOS Safari surfaces the
+  // soft keyboard most reliably when focus() is called synchronously from a
+  // real DOM click event (not R3F synthetic touchend).
+  useEffect(() => {
+    if (!isTouch) return
+    const canvas = document.querySelector('canvas')
+    if (!canvas) return
+    const onClickEvt = () => inputRef.current?.focus()
+    canvas.addEventListener('click', onClickEvt)
+    return () => canvas.removeEventListener('click', onClickEvt)
+  }, [isTouch])
+
+  const focusTerminal = useCallback((e) => {
+    e?.stopPropagation?.()
+    inputRef.current?.focus()
+  }, [])
+
   const ledOnMat  = ledRed
   const ledOffMat = useMemo(() => new THREE.MeshStandardMaterial({
     color: '#3a1614', roughness: 0.6, metalness: 0.1, emissive: '#000000', emissiveIntensity: 0,
@@ -612,8 +748,21 @@ export default function Device() {
       <RoundedBox args={[2.1, 0.06, 1.5]} radius={0.04} smoothness={4}
         position={[0.95, H / 2 + 0.001, -0.4]} material={bezel} receiveShadow />
       {/* Screen — face up, slightly raised above bezel */}
-      <group position={[0.95, H / 2 + 0.07, -0.4]} rotation={[-Math.PI / 2, 0, 0]}>
-        <Screen width={1.85} height={1.3} boot={boot} lines={lines} input={input} />
+      <group
+        position={[0.95, H / 2 + 0.07, -0.4]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        onClick={powered ? focusTerminal : undefined}
+        onPointerOver={powered ? (e) => { e.stopPropagation(); setCursor('text')() } : undefined}
+        onPointerOut={powered ? setCursor('auto') : undefined}
+      >
+        <Screen
+          width={1.85}
+          height={1.3}
+          boot={boot}
+          lines={lines}
+          input={input}
+          hint={isTouch && !focused && powerState === 'on'}
+        />
       </group>
       {/* Phosphor screen spill light — scales with boot */}
       <pointLight position={[0.95, H / 2 + 0.45, -0.4]} intensity={boot * 0.9} color="#7cff5a" distance={2.4} decay={2} />

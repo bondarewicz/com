@@ -46,8 +46,13 @@ export default function Scene() {
       />
 
       <OrbitControls
-        enablePan={false}
-        enableZoom={false}
+        enablePan
+        enableZoom
+        minDistance={3.5}
+        maxDistance={9}
+        zoomSpeed={0.6}
+        panSpeed={0.6}
+        screenSpacePanning
         minPolarAngle={Math.PI * 0.18}
         maxPolarAngle={Math.PI * 0.48}
         minAzimuthAngle={-Math.PI * 0.4}
@@ -55,6 +60,7 @@ export default function Scene() {
         enableDamping
         dampingFactor={0.06}
         rotateSpeed={0.5}
+        touches={{ ONE: 0, TWO: 2 }}
       />
     </Canvas>
   )
