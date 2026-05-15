@@ -146,7 +146,7 @@ function makeScanlineTexture() {
 */
 
 const PHOSPHOR = '#E8DDB8'
-const CHARS_PER_LINE = 46
+const CHARS_PER_LINE = 54
 
 // Creative shell prompt — embeds today's weekday so "happy friday" surfaces in the prompt itself
 const PROMPT_PREFIX = (() => {
@@ -508,19 +508,25 @@ function Screen({ width, height, boot, lines, input, hint, ready }) {
                 {`${promptPrefix}${input}`}
               </Text>
 
-              <mesh
-                ref={cursorRef}
-                position={[
-                  padX + (promptPrefix.length + input.length) * charW + charW * 0.5,
-                  // Vertically center on the glyph cap-height, not the full em-square,
-                  // so the cursor aligns with the visible letters instead of dropping below the baseline
-                  promptY - fontSize * 0.38,
-                  0.003,
-                ]}
-              >
-                <planeGeometry args={[charW * 0.9, fontSize * 0.72]} />
-                <meshBasicMaterial color={PHOSPHOR} transparent opacity={contentOpacity} />
-              </mesh>
+              {(() => {
+                const cursorH = fontSize * 0.85
+                // Baseline of the prompt text — adjust this factor up (down on screen) / down (up) to tweak.
+                const baselineY = promptY - fontSize * 0.98
+                const cursorY = baselineY + cursorH / 2
+                return (
+                  <mesh
+                    ref={cursorRef}
+                    position={[
+                      padX + (promptPrefix.length + input.length) * charW + charW * 0.5,
+                      cursorY,
+                      0.003,
+                    ]}
+                  >
+                    <planeGeometry args={[charW * 0.75, cursorH]} />
+                    <meshBasicMaterial color={PHOSPHOR} transparent opacity={contentOpacity} />
+                  </mesh>
+                )
+              })()}
             </>
           )}
 
