@@ -2,6 +2,7 @@ import { useRef, useMemo, useState, useEffect, useCallback } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { RoundedBox, Text } from '@react-three/drei'
 import * as THREE from 'three'
+import { GIT_SHA } from './version.js'
 
 const MONO_FONT = 'https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf'
 const MONO_FONT_BOLD = 'https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Bold.ttf'
@@ -22,36 +23,107 @@ const creamDark  = new THREE.MeshStandardMaterial({ color: COLOR.creamDim, rough
 const bezel      = new THREE.MeshStandardMaterial({ color: COLOR.cream,    roughness: 0.55, metalness: 0.05 })
 const tealMat    = new THREE.MeshStandardMaterial({ color: COLOR.teal,     roughness: 0.55, metalness: 0.05 })
 const mustardMat = new THREE.MeshStandardMaterial({ color: COLOR.mustard,  roughness: 0.5,  metalness: 0.05, emissive: '#5a3a08', emissiveIntensity: 0.15 })
-const keyMat     = new THREE.MeshStandardMaterial({ color: '#EAE0C8',      roughness: 0.7,  metalness: 0.05 })
-const keyDark    = new THREE.MeshStandardMaterial({ color: COLOR.creamDim, roughness: 0.7,  metalness: 0.05 })
+const keyMat     = new THREE.MeshStandardMaterial({ color: '#F6EFD4',      roughness: 0.55, metalness: 0.04 })
+const keyDark    = new THREE.MeshStandardMaterial({ color: '#D6CBA9',      roughness: 0.6,  metalness: 0.04 })
+const trayMat    = new THREE.MeshStandardMaterial({ color: '#C9BFA0',      roughness: 0.78, metalness: 0.03 })
 const ledRed     = new THREE.MeshStandardMaterial({ color: '#FF3A2E', emissive: '#FF1A14', emissiveIntensity: 1.5, roughness: 0.4 })
 
-/* ───── Keyboard grid ───────────────────────────────────────── */
-function Keyboard({ rows = 4, cols = 11 }) {
-  const keys = []
-  const kw = 0.22, kh = 0.18, kd = 0.12, gap = 0.02
-  const totalW = cols * (kw + gap) - gap
+/* ───── Keyboard — QWERTY with labels, clickable, press animation ─── */
+const KB_ROWS = [
+  ['Q','W','E','R','T','Y','U','I','O','P', { id: 'ENTER', label: 'enter', w: 1.8 }],
+  ['A','S','D','F','G','H','J','K','L', { id: 'BACKSPACE', label: 'backspace', w: 2.4 }],
+  ['Z','X','C','V','B','N','M', { id: '@', label: '@', w: 1 }],
+  [{ id: 'SPACE', label: '', w: 7 }],
+]
+
+function Keyboard({ pressedAtRef, onChar, onAction }) {
+  const kw = 0.180, kh = 0.150, kd = 0.07, gap = 0.024
+  const baseY = kd / 2
+  const keyRefs = useRef({})
+
+  const sized = useMemo(() => KB_ROWS.map((row) =>
+    row.map((k) => typeof k === 'string' ? { id: k, label: k, w: 1 } : k)
+  ), [])
+
+  const rowWidth = (row) => row.reduce((acc, k) => acc + k.w * kw, 0) + (row.length - 1) * gap
+  const maxRowW = Math.max(...sized.map(rowWidth))
+  const rows = sized.length
   const totalH = rows * (kh + gap) - gap
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const x = c * (kw + gap) - totalW / 2 + kw / 2 + (r === 1 ? 0.05 : 0) + (r === 2 ? 0.1 : 0)
-      const z = r * (kh + gap) - totalH / 2 + kh / 2
-      const isLight  = (r === 3 && c === 0)
-      keys.push(
-        <RoundedBox
-          key={`${r}-${c}`}
-          args={[kw, kd, kh]}
-          radius={0.018}
-          smoothness={3}
-          position={[x, kd / 2, z]}
-          material={isLight ? keyDark : keyMat}
-          castShadow
-          receiveShadow
-        />
-      )
+
+  // Press animation — read pressed timestamps every frame and depress keys briefly
+  useFrame(() => {
+    if (!pressedAtRef?.current) return
+    const now = performance.now()
+    for (const id in keyRefs.current) {
+      const ref = keyRefs.current[id]
+      if (!ref) continue
+      const t = pressedAtRef.current[id]
+      const elapsed = t == null ? Infinity : now - t
+      const k = elapsed < 140 ? (1 - elapsed / 140) : 0
+      ref.position.y = baseY - k * 0.035
     }
+  })
+
+  const handleClick = (k) => (e) => {
+    e?.stopPropagation?.()
+    pressedAtRef.current[k.id] = performance.now()
+    if (k.id === 'ENTER') onAction?.('enter')
+    else if (k.id === 'BACKSPACE') onAction?.('backspace')
+    else if (k.id === 'SPACE') onChar?.(' ')
+    else if (k.id === '@') onChar?.('@')
+    else onChar?.(k.id.toLowerCase())
   }
-  return <group>{keys}</group>
+
+  const setCur = (c) => (e) => { e?.stopPropagation?.(); document.body.style.cursor = c }
+
+  const items = []
+  sized.forEach((row, r) => {
+    // Center each row inside the keyboard footprint
+    const rw = rowWidth(row)
+    let cursorX = -rw / 2
+    const z = r * (kh + gap) - totalH / 2 + kh / 2
+    row.forEach((k, c) => {
+      const w = k.w * kw
+      const x = cursorX + w / 2
+      items.push(
+        <group
+          key={`g-${r}-${c}`}
+          position={[x, 0, z]}
+          onClick={handleClick(k)}
+          onPointerOver={setCur('pointer')}
+          onPointerOut={setCur('auto')}
+        >
+          <RoundedBox
+            ref={(el) => { if (el) keyRefs.current[k.id] = el }}
+            args={[w, kd, kh]}
+            radius={0.018}
+            smoothness={3}
+            position={[0, baseY, 0]}
+            material={keyDark}
+            castShadow
+            receiveShadow
+          />
+          {k.label && (
+            <Text
+              position={[0, kd + 0.003, 0]}
+              rotation={[-Math.PI / 2, 0, 0]}
+              fontSize={k.id === 'ENTER' || k.id === 'BACKSPACE' ? 0.045 : 0.075}
+              font={MONO_FONT_BOLD}
+              color="#3a3320"
+              anchorX="center"
+              anchorY="middle"
+              letterSpacing={0.04}
+            >
+              {k.label}
+            </Text>
+          )}
+        </group>
+      )
+      cursorX += w + gap
+    })
+  })
+
+  return <group>{items}</group>
 }
 
 /* ───── Scanline texture (procedural) ───────────────────────── */
@@ -73,8 +145,14 @@ function makeScanlineTexture() {
    `boot` is a 0..1 progress (off = 0, on = 1, in-between values during transition).
 */
 
-const PHOSPHOR = '#9bff5e'
+const PHOSPHOR = '#E8DDB8'
 const CHARS_PER_LINE = 46
+
+// Creative shell prompt — embeds today's weekday so "happy friday" surfaces in the prompt itself
+const PROMPT_PREFIX = (() => {
+  const day = new Date().toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase()
+  return `lb@mk1·${day} ❯ `
+})()
 // Matches lines made of QR block characters + spaces (▀ ▄ █  )
 const QR_RE = /^[ ▀▄█]+$/
 
@@ -138,13 +216,38 @@ COMMANDS.cls = null  // handled inline as clear
 COMMANDS.clear = null
 
 const API_BASE = 'https://api.bondarewicz.com/v1'
+const VISITS_URL = `${API_BASE}/visits`
 
 const ASYNC_COMMANDS = {
-  ip:      { url: `${API_BASE}/ip` },
+  ip: {
+    url: `${API_BASE}/ip`,
+    format: (d) => {
+      const pick = (...keys) => {
+        for (const k of keys) {
+          const v = k.split('.').reduce((o, p) => (o == null ? o : o[p]), d)
+          if (v != null && v !== '') return v
+        }
+        return null
+      }
+      const ip      = pick('ip', 'query', 'addr')
+      const city    = pick('city', 'location.city')
+      const region  = pick('region', 'region_name', 'subdivision', 'state')
+      const country = pick('country_name', 'country', 'country_code', 'cc')
+      const isp     = pick('isp', 'org', 'organization', 'asn_org')
+      const where = [city, region, country].filter(Boolean).join(', ')
+      const tail = isp ? ` via ${isp}` : ''
+      if (!ip) return ['no IP returned.']
+      if (!where) return [`Your IP is ${ip}${tail}.`]
+      return [`Your IP is ${ip}, coming from ${where}${tail}.`]
+    },
+  },
   weather: { url: `${API_BASE}/weather` },
   visits: {
-    url: `${API_BASE}/visits`,
-    format: (d) => [`visit #${d?.count ?? '?'}`],
+    url: VISITS_URL,
+    format: (d) => {
+      const n = Number(d?.count ?? d?.value)
+      return Number.isFinite(n) ? [`${n} visits`] : ['no count returned.']
+    },
   },
   qr: { url: `${API_BASE}/qr` },
   ua: {
@@ -216,11 +319,15 @@ function runCommand(raw) {
 }
 
 /* ───── The CRT screen ──────────────────────────────────────── */
-function Screen({ width, height, boot, lines, input, hint }) {
+function Screen({ width, height, boot, lines, input, hint, ready }) {
   const flickerRef = useRef()
   const cursorRef  = useRef()
-  const sweepRef   = useRef()
+  const scanlineRef = useRef()
+  const topMaskRef = useRef()
+  const bottomMaskRef = useRef()
   const contentGroupRef = useRef()
+
+  const promptPrefix = PROMPT_PREFIX
 
   const scanTex = useMemo(() => {
     const tex = makeScanlineTexture()
@@ -235,16 +342,29 @@ function Screen({ width, height, boot, lines, input, hint }) {
       const r = Math.random()
       flickerRef.current.material.opacity = (boot > 0.95 && r > 0.992) ? 0.12 : 0
     }
-    // Boot sweep — bright bar travels top → bottom during 0..0.7 of boot
-    if (sweepRef.current) {
-      if (boot > 0 && boot < 0.85) {
-        const p = Math.min(1, boot / 0.7)
-        sweepRef.current.visible = true
-        sweepRef.current.position.y = height / 2 - p * height
-        sweepRef.current.material.opacity = 0.9 * (1 - Math.max(0, (boot - 0.7) / 0.15))
-      } else {
-        sweepRef.current.visible = false
+    // Authentic CRT power-on sequence:
+    //   ~0.00–0.22: filament/phosphor warm-up glow rising
+    //   ~0.20–0.55: bright horizontal scan line forms at center (electron beam starts)
+    //   ~0.40–0.65: vertical deflection "opens" the screen — top/bottom masks retract
+    //   ~0.65–1.00: full image stabilizes, content fades in, micro-flicker on top
+    if (scanlineRef.current) {
+      // Gaussian-ish intensity centered at boot=0.32, sigma=0.10
+      const dx = (boot - 0.32) / 0.10
+      const intensity = Math.exp(-dx * dx)
+      const visible = intensity > 0.04 && boot < 0.62
+      scanlineRef.current.visible = visible
+      if (visible) {
+        scanlineRef.current.material.opacity = intensity * 0.95
+        // line grows thicker as the beam stabilizes, then snaps thin again
+        const thickness = 0.012 + intensity * 0.024
+        scanlineRef.current.scale.y = thickness / 0.02
       }
+    }
+    if (topMaskRef.current && bottomMaskRef.current) {
+      // Masks fully cover (scale 1) until boot 0.40, retract to 0 by 0.62
+      const s = boot < 0.40 ? 1 : Math.max(0, 1 - (boot - 0.40) / 0.22)
+      topMaskRef.current.scale.y = s
+      bottomMaskRef.current.scale.y = s
     }
   })
 
@@ -257,7 +377,7 @@ function Screen({ width, height, boot, lines, input, hint }) {
   // Text sizing
   const fontSize = 0.048
   const lineHeight = 0.072
-  const topY = halfH - 0.18
+  const topY = halfH - 0.10
   const charW = fontSize * 0.62
 
   // QR sizing — small + tight so a typical QR fits the screen
@@ -314,36 +434,47 @@ function Screen({ width, height, boot, lines, input, hint }) {
         <meshBasicMaterial color="#040705" />
       </mesh>
 
-      {/* Warm-up glow when booting */}
-      {boot > 0 && boot < 1 && (
+      {/* Cathode warm-up glow — soft phosphor wash that builds and fades */}
+      {boot > 0 && boot < 0.7 && (
         <mesh position={[0, 0, 0.001]}>
           <planeGeometry args={[width, height]} />
-          <meshBasicMaterial color={PHOSPHOR} transparent opacity={Math.max(0, 0.06 * (1 - Math.abs(boot - 0.5) * 2))} depthWrite={false} />
+          <meshBasicMaterial
+            color={PHOSPHOR}
+            transparent
+            opacity={Math.max(0, 0.12 * Math.exp(-Math.pow((boot - 0.28) / 0.18, 2)))}
+            depthWrite={false}
+          />
         </mesh>
       )}
 
-      {/* Boot scan sweep */}
-      <mesh ref={sweepRef} position={[0, halfH, 0.0025]} visible={false}>
-        <planeGeometry args={[width, 0.04]} />
-        <meshBasicMaterial color={PHOSPHOR} transparent opacity={0.9} depthWrite={false} />
+      {/* Center "first scan" line — the electron beam striking the phosphor before vertical deflection kicks in */}
+      <mesh ref={scanlineRef} position={[0, 0, 0.0035]} visible={false}>
+        <planeGeometry args={[width, 0.02]} />
+        <meshBasicMaterial color={PHOSPHOR} transparent opacity={0} depthWrite={false} />
       </mesh>
+
+      {/* Top occlusion mask — retracts toward the top edge as the screen "opens" vertically */}
+      {boot < 0.65 && (
+        <group ref={topMaskRef} position={[0, halfH, 0.004]}>
+          <mesh position={[0, -halfH / 2, 0]}>
+            <planeGeometry args={[width, halfH]} />
+            <meshBasicMaterial color="#040705" />
+          </mesh>
+        </group>
+      )}
+
+      {/* Bottom occlusion mask */}
+      {boot < 0.65 && (
+        <group ref={bottomMaskRef} position={[0, -halfH, 0.004]}>
+          <mesh position={[0, halfH / 2, 0]}>
+            <planeGeometry args={[width, halfH]} />
+            <meshBasicMaterial color="#040705" />
+          </mesh>
+        </group>
+      )}
 
       {contentVisible && (
         <group ref={contentGroupRef}>
-          {/* Header */}
-          <Text
-            position={[padX, halfH - 0.08, 0.003]}
-            fontSize={0.038}
-            font={MONO_FONT_BOLD}
-            color={PHOSPHOR}
-            anchorX="left"
-            anchorY="top"
-            letterSpacing={0.10}
-            fillOpacity={contentOpacity}
-          >
-            ◉ LB MARK I · ONLINE
-          </Text>
-
           {/* Buffered lines — text rows are word-wrapped, QR rows render tight + small */}
           {placed.map((item, i) => (
             <Text
@@ -361,32 +492,37 @@ function Screen({ width, height, boot, lines, input, hint }) {
             </Text>
           ))}
 
-          {/* Prompt + live input */}
-          <Text
-            position={[padX, promptY, 0.003]}
-            fontSize={fontSize}
-            font={MONO_FONT_BOLD}
-            color={PHOSPHOR}
-            anchorX="left"
-            anchorY="top"
-            letterSpacing={0.015}
-            fillOpacity={contentOpacity}
-          >
-            {`$ ${input}`}
-          </Text>
+          {/* Prompt + live input — only after boot completes */}
+          {ready && (
+            <>
+              <Text
+                position={[padX, promptY, 0.003]}
+                fontSize={fontSize}
+                font={MONO_FONT_BOLD}
+                color={PHOSPHOR}
+                anchorX="left"
+                anchorY="top"
+                letterSpacing={0.015}
+                fillOpacity={contentOpacity}
+              >
+                {`${promptPrefix}${input}`}
+              </Text>
 
-          {/* Blinking cursor block — placed at end of input */}
-          <mesh
-            ref={cursorRef}
-            position={[
-              padX + (2 + input.length) * charW + charW * 0.5,
-              promptY - fontSize * 0.5,
-              0.003,
-            ]}
-          >
-            <planeGeometry args={[charW * 0.8, fontSize * 0.9]} />
-            <meshBasicMaterial color={PHOSPHOR} transparent opacity={contentOpacity * 0.85} />
-          </mesh>
+              <mesh
+                ref={cursorRef}
+                position={[
+                  padX + (promptPrefix.length + input.length) * charW + charW * 0.5,
+                  // Vertically center on the glyph cap-height, not the full em-square,
+                  // so the cursor aligns with the visible letters instead of dropping below the baseline
+                  promptY - fontSize * 0.38,
+                  0.003,
+                ]}
+              >
+                <planeGeometry args={[charW * 0.9, fontSize * 0.72]} />
+                <meshBasicMaterial color={PHOSPHOR} transparent opacity={contentOpacity} />
+              </mesh>
+            </>
+          )}
 
           {hint && (
             <Text
@@ -468,26 +604,98 @@ function Label({ position, rotation, children, size = 0.04, color = '#5a533c', a
 /* ───── The whole device ────────────────────────────────────── */
 export default function Device() {
   const root = useRef()
-  const [powerState, setPowerState] = useState('on') // 'off' | 'booting' | 'on' | 'shutting'
+  const [powerState, setPowerState] = useState('off') // 'off' | 'booting' | 'on' | 'shutting'
   const stateChangedAt = useRef(performance.now() / 1000)
-  const [boot, setBoot] = useState(1)
-  const [lines, setLines] = useState([
-    '__pending_hello__',
-    "type 'help' to begin.",
-  ])
+  const [boot, setBoot] = useState(0)
+  const [lines, setLines] = useState([])
+  const [bootComplete, setBootComplete] = useState(false)
 
+  // Country code derived from the visitor's IP — surfaced in the boot AUTH line
+  const countryRef = useRef('??')
   useEffect(() => {
     let cancelled = false
-    fetchLines('https://api.bondarewicz.com/v1/hello').then((out) => {
-      if (cancelled) return
-      setLines((prev) => {
-        const idx = prev.indexOf('__pending_hello__')
-        if (idx === -1) return prev
-        return [...prev.slice(0, idx), ...out, ...prev.slice(idx + 1)]
+    fetch(`${API_BASE}/ip`, { headers: { Accept: 'application/json' } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (cancelled || !d) return
+        const cc = d.country || d.country_code || d.countryCode || d.cc
+        if (cc) countryRef.current = String(cc).toLowerCase()
       })
-    })
+      .catch(() => {})
     return () => { cancelled = true }
   }, [])
+
+
+  // Boot sequence — each step prints its label, dots grow incrementally, then the result reveals.
+  // Token-based cancellation: incrementing the token invalidates any in-progress run.
+  // We only invalidate when the user powers off / starts shutting down — NOT when the CRT
+  // finishes warming up ('booting' → 'on'), so the diagnostic stream completes naturally.
+  const bootTokenRef = useRef(0)
+  useEffect(() => {
+    if (powerState === 'off') {
+      bootTokenRef.current++
+      setLines([])
+      setBootComplete(false)
+      return
+    }
+    if (powerState === 'shutting') {
+      bootTokenRef.current++
+      setBootComplete(false)
+      return
+    }
+    if (powerState !== 'booting') return
+
+    bootTokenRef.current++
+    const myToken = bootTokenRef.current
+    const alive = () => bootTokenRef.current === myToken
+    setLines([])
+    setBootComplete(false)
+
+    const delay = (ms) => new Promise((res) => setTimeout(res, ms))
+    const push = (line) => {
+      if (!alive()) return
+      setLines((prev) => [...prev, line])
+    }
+    const replaceLast = (line) => {
+      if (!alive()) return
+      setLines((prev) => {
+        if (prev.length === 0) return prev
+        const next = prev.slice()
+        next[next.length - 1] = line
+        return next
+      })
+    }
+    const stepDots = async (label, dotCount, result) => {
+      if (!alive()) return
+      push(`${label}   `)
+      for (let i = 1; i <= dotCount; i++) {
+        await delay(28)
+        if (!alive()) return
+        replaceLast(`${label}   ${'.'.repeat(i)}`)
+      }
+      await delay(70)
+      if (!alive()) return
+      replaceLast(`${label}   ${'.'.repeat(dotCount)} ${result}`)
+    }
+
+    ;(async () => {
+      await delay(220)
+      push('lb-mk1 · rom 0401.MMXXVI')
+      await delay(160)
+      await stepDots('post', 18, 'ok')
+      await delay(90)
+      await stepDots('ram',  9,  '64K verified')
+      await delay(90)
+      await stepDots('crt',  6,  'phosphor warm-up · ok')
+      await delay(90)
+      await stepDots('net',  12, 'link up')
+      await delay(90)
+      await stepDots('auth', 8,  `guest ${countryRef.current}`)
+      await delay(140)
+      push('sys: ready')
+      if (alive()) setBootComplete(true)
+    })()
+  }, [powerState])
   const [input, setInput] = useState('')
   const inputRef = useRef(null)
   const [focused, setFocused] = useState(false)
@@ -496,7 +704,56 @@ export default function Device() {
     return window.matchMedia?.('(pointer: coarse)').matches ?? 'ontouchstart' in window
   }, [])
 
+  // Shared press timestamps — animate any 3D key/button that's been hit recently
+  const pressedAtRef = useRef({})
+  const fbtnRefs = useRef({})
+  const pressKey = useCallback((id) => {
+    pressedAtRef.current[id] = performance.now()
+  }, [])
+
+  // F1–F5 mapped to commands
+  const F_KEYS = useMemo(() => [
+    { id: 'F1', label: 'POWER',  cmd: 'poweroff', tint: 'coral' },
+    { id: 'F2', label: 'HELP',   cmd: 'help',     tint: 'cream' },
+    { id: 'F3', label: 'IP',     cmd: 'ip',       tint: 'teal' },
+    { id: 'F4', label: 'UA',     cmd: 'ua',       tint: 'cream' },
+    { id: 'F5', label: 'VISITS', cmd: 'visits',   tint: 'mustard' },
+  ], [])
+
   const powered = powerState === 'on' || powerState === 'booting'
+
+  // Swap the favicon to reflect the device's power LED — coral glow when on, dim when off
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    const on = powerState === 'on' || powerState === 'booting'
+    const svg = on
+      ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+           <defs>
+             <radialGradient id="h" cx="50%" cy="50%" r="50%">
+               <stop offset="0%" stop-color="#ff7a64" stop-opacity="0.95"/>
+               <stop offset="40%" stop-color="#ff3a2e" stop-opacity="0.55"/>
+               <stop offset="100%" stop-color="#ff1a14" stop-opacity="0"/>
+             </radialGradient>
+             <radialGradient id="c" cx="50%" cy="50%" r="50%">
+               <stop offset="0%" stop-color="#ffd6cc" stop-opacity="1"/>
+               <stop offset="60%" stop-color="#ff3a2e" stop-opacity="1"/>
+               <stop offset="100%" stop-color="#c7472b" stop-opacity="1"/>
+             </radialGradient>
+           </defs>
+           <circle cx="32" cy="32" r="28" fill="url(#h)"/>
+           <circle cx="32" cy="32" r="12" fill="url(#c)"/>
+         </svg>`
+      : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+           <circle cx="32" cy="32" r="12" fill="#3a1614"/>
+         </svg>`
+    const href = `data:image/svg+xml,${encodeURIComponent(svg)}`
+    document.querySelectorAll('link[rel="icon"],link[rel="shortcut icon"],link[rel="alternate icon"]').forEach((el) => el.remove())
+    const link = document.createElement('link')
+    link.rel = 'icon'
+    link.type = 'image/svg+xml'
+    link.href = href
+    document.head.appendChild(link)
+  }, [powerState])
 
   const setPower = useCallback((next) => {
     setPowerState((cur) => {
@@ -535,16 +792,73 @@ export default function Device() {
     }
   })
 
-  // Keyboard handler — only when terminal is on
+  // F-button press animation — drive Y offset from pressedAtRef
+  useFrame(() => {
+    const now = performance.now()
+    for (const id in fbtnRefs.current) {
+      const ref = fbtnRefs.current[id]
+      if (!ref) continue
+      const t = pressedAtRef.current[id]
+      const elapsed = t == null ? Infinity : now - t
+      const k = elapsed < 160 ? (1 - elapsed / 160) : 0
+      ref.position.y = -k * 0.025
+    }
+  })
+
+  // Shared command runner — used by F-keys, physical Enter, on-screen keyboard
+  const submit = useCallback((entered) => {
+    const res = runCommand(entered)
+    if (res.clear) { setLines([]); return }
+    if (res.powerOff) {
+      setLines((prev) => [...prev, `${PROMPT_PREFIX}${entered}`, 'shutting down...'])
+      setTimeout(() => setPower('off'), 0)
+      return
+    }
+    if (res.async) {
+      const marker = `__pending_${Date.now()}_${Math.random().toString(36).slice(2, 6)}__`
+      setLines((prev) => [...prev, `${PROMPT_PREFIX}${entered}`, marker])
+      fetchLines(res.async.url, res.async.format).then((out) => {
+        setLines((prev) => {
+          const idx = prev.indexOf(marker)
+          if (idx === -1) return [...prev, ...out]
+          return [...prev.slice(0, idx), ...out, ...prev.slice(idx + 1)]
+        })
+      })
+      return
+    }
+    setLines((prev) => res.lines?.length
+      ? [...prev, `${PROMPT_PREFIX}${entered}`, ...res.lines]
+      : [...prev, `${PROMPT_PREFIX}${entered}`])
+  }, [setPower])
+
+  // Keyboard handler
   useEffect(() => {
-    if (powerState !== 'on') return
     const onKey = (e) => {
+      // F1 always toggles power — works whether terminal is on or off
+      if (e.key === 'F1') {
+        e.preventDefault()
+        pressKey('F1')
+        togglePower()
+        return
+      }
+      // Terminal off: nothing else does anything
+      if (powerState !== 'on') return
+      // F2–F5 → run the bound command + animate the on-screen button
+      if (/^F[2-5]$/.test(e.key)) {
+        e.preventDefault()
+        const fk = F_KEYS[parseInt(e.key.slice(1), 10) - 1]
+        if (fk) {
+          pressKey(fk.id)
+          submit(fk.cmd)
+        }
+        return
+      }
       // Ctrl+C — cancel current input line (echo `^C`, fresh prompt) — unless text is selected
       if (e.ctrlKey && !e.metaKey && !e.altKey && (e.key === 'c' || e.key === 'C')) {
         const hasSelection = (window.getSelection?.()?.toString() ?? '').length > 0
         if (!hasSelection) {
           e.preventDefault()
-          setLines((prev) => [...prev, `$ ${input}^C`])
+          setLines((prev) => [...prev, `${PROMPT_PREFIX}${input}^C`])
           setInput('')
           return
         }
@@ -553,18 +867,19 @@ export default function Device() {
       if (e.metaKey || e.ctrlKey || e.altKey) return
       if (e.key === 'Enter') {
         e.preventDefault()
+        pressKey('ENTER')
         const entered = input
         setInput('')
         const res = runCommand(entered)
         if (res.clear) { setLines([]); return }
         if (res.powerOff) {
-          setLines((prev) => [...prev, `$ ${entered}`, 'shutting down...'])
+          setLines((prev) => [...prev, `${PROMPT_PREFIX}${entered}`, 'shutting down...'])
           setTimeout(() => setPower('off'), 0)
           return
         }
         if (res.async) {
           const marker = `__pending_${Date.now()}_${Math.random().toString(36).slice(2, 6)}__`
-          setLines((prev) => [...prev, `$ ${entered}`, marker])
+          setLines((prev) => [...prev, `${PROMPT_PREFIX}${entered}`, marker])
           fetchLines(res.async.url, res.async.format).then((out) => {
             setLines((prev) => {
               const idx = prev.indexOf(marker)
@@ -575,12 +890,13 @@ export default function Device() {
           return
         }
         setLines((prev) => res.lines?.length
-          ? [...prev, `$ ${entered}`, ...res.lines]
-          : [...prev, `$ ${entered}`])
+          ? [...prev, `${PROMPT_PREFIX}${entered}`, ...res.lines]
+          : [...prev, `${PROMPT_PREFIX}${entered}`])
         return
       }
       if (e.key === 'Backspace') {
         e.preventDefault()
+        pressKey('BACKSPACE')
         setInput((s) => s.slice(0, -1))
         return
       }
@@ -592,38 +908,17 @@ export default function Device() {
       // Printable single-char keys
       if (e.key.length === 1) {
         e.preventDefault()
-        setInput((s) => (s.length < 48 ? s + e.key : s))
+        const ch = e.key
+        // Animate the matching 3D key — letters by upper, space → SPACE, '@' → @
+        if (ch === ' ') pressKey('SPACE')
+        else if (ch === '@') pressKey('@')
+        else if (/^[a-zA-Z]$/.test(ch)) pressKey(ch.toUpperCase())
+        setInput((s) => (s.length < 48 ? s + ch : s))
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [powerState, input, setPower])
-
-  // Shared command runner used by the touch (soft-keyboard) path
-  const submit = useCallback((entered) => {
-    const res = runCommand(entered)
-    if (res.clear) { setLines([]); return }
-    if (res.powerOff) {
-      setLines((prev) => [...prev, `$ ${entered}`, 'shutting down...'])
-      setTimeout(() => setPower('off'), 0)
-      return
-    }
-    if (res.async) {
-      const marker = `__pending_${Date.now()}_${Math.random().toString(36).slice(2, 6)}__`
-      setLines((prev) => [...prev, `$ ${entered}`, marker])
-      fetchLines(res.async.url, res.async.format).then((out) => {
-        setLines((prev) => {
-          const idx = prev.indexOf(marker)
-          if (idx === -1) return [...prev, ...out]
-          return [...prev.slice(0, idx), ...out, ...prev.slice(idx + 1)]
-        })
-      })
-      return
-    }
-    setLines((prev) => res.lines?.length
-      ? [...prev, `$ ${entered}`, ...res.lines]
-      : [...prev, `$ ${entered}`])
-  }, [setPower])
+  }, [powerState, input, setPower, submit, pressKey, F_KEYS])
 
   // Live handler refs so the imperative DOM input always sees latest state
   const touchHandlersRef = useRef({})
@@ -729,10 +1024,10 @@ export default function Device() {
   useFrame((state, delta) => {
     if (!root.current) return
     const t = state.clock.getElapsedTime()
-    // Gentle idle sway
-    root.current.rotation.y = Math.sin(t * 0.18) * 0.18 - 0.05
-    root.current.rotation.x = Math.sin(t * 0.22) * 0.05 - 0.18
-    root.current.position.y = Math.sin(t * 0.6) * 0.04
+    // Gentle idle sway — small amounts since the camera is near top-down
+    root.current.rotation.y = Math.sin(t * 0.18) * 0.04
+    root.current.rotation.x = Math.sin(t * 0.22) * 0.02
+    root.current.position.y = Math.sin(t * 0.6) * 0.015
   })
 
   // Body dimensions
@@ -745,8 +1040,30 @@ export default function Device() {
 
 
       {/* ── Screen recess + bezel ── */}
-      <RoundedBox args={[2.1, 0.06, 1.5]} radius={0.04} smoothness={4}
+      <RoundedBox args={[2.2, 0.06, 1.6]} radius={0.04} smoothness={4}
         position={[0.95, H / 2 + 0.001, -0.4]} material={bezel} receiveShadow />
+
+      {/* Bezel corner screws */}
+      {[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([sx, sz], i) => (
+        <mesh
+          key={`screw-${i}`}
+          position={[0.95 + sx * 0.98, H / 2 + 0.04, -0.4 + sz * 0.68]}
+          material={keyDark}
+          castShadow
+        >
+          <cylinderGeometry args={[0.022, 0.022, 0.014, 12]} />
+        </mesh>
+      ))}
+
+      {/* LB-CRT serial label below screen */}
+      <Label
+        position={[-0.05, H / 2 + 0.01, 0.42]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        size={0.030}
+        anchorY="middle"
+      >
+        {'LB-CRT · 9" · P/N 0401-MMXXVI'}
+      </Label>
       {/* Screen — face up, slightly raised above bezel */}
       <group
         position={[0.95, H / 2 + 0.07, -0.4]}
@@ -761,42 +1078,58 @@ export default function Device() {
           boot={boot}
           lines={lines}
           input={input}
-          hint={isTouch && !focused && powerState === 'on'}
+          hint={isTouch && !focused && powerState === 'on' && bootComplete}
+          ready={bootComplete}
         />
       </group>
       {/* Phosphor screen spill light — scales with boot */}
-      <pointLight position={[0.95, H / 2 + 0.45, -0.4]} intensity={boot * 0.9} color="#7cff5a" distance={2.4} decay={2} />
+      <pointLight position={[0.95, H / 2 + 0.45, -0.4]} intensity={boot * 0.5} color="#e8ddb8" distance={2.0} decay={2} />
 
 
 
-      {/* ── Power button (red, top of left cluster) ── */}
-      <group
-        position={[-W / 2 + 0.55, H / 2 + 0.03 + (powered ? 0 : -0.012), -0.62]}
-        onClick={togglePower}
-        onPointerOver={(e) => { e.stopPropagation(); setCursor('pointer')() }}
-        onPointerOut={setCursor('auto')}
-      >
-        <RoundedBox
-          args={[0.22, 0.06, 0.18]}
-          radius={0.018}
-          smoothness={3}
-          material={powered ? powerOnMat : powerOffMat}
-          castShadow
-        />
-      </group>
-
-      {/* ── Cluster buttons under the power key (cream / teal / mustard mix) ── */}
-      {[creamDark, tealMat, creamDark, mustardMat].map((mat, i) => (
-        <RoundedBox
-          key={`lbtn-${i}`}
-          args={[0.22, 0.06, 0.18]}
-          radius={0.018}
-          smoothness={3}
-          position={[-W / 2 + 0.55, H / 2 + 0.03, -0.38 + i * 0.24]}
-          material={mat}
-          castShadow
-        />
-      ))}
+      {/* ── F1–F5 button cluster + labels ── */}
+      {F_KEYS.map((fk, i) => {
+        const z = -0.42 + i * 0.22
+        const mat = fk.tint === 'coral' ? powerOnMat
+                  : fk.tint === 'teal' ? tealMat
+                  : fk.tint === 'mustard' ? mustardMat
+                  : creamDark
+        const handleFClick = (e) => {
+          e?.stopPropagation?.()
+          pressKey(fk.id)
+          if (fk.id === 'F1') togglePower()
+          else if (powerState === 'on') submit(fk.cmd)
+        }
+        return (
+          <group key={fk.id}>
+            {/* Button cap — flat slab on body */}
+            <group
+              position={[-W / 2 + 0.55, H / 2 + 0.03, z]}
+              onClick={handleFClick}
+              onPointerOver={(e) => { e.stopPropagation(); setCursor('pointer')() }}
+              onPointerOut={setCursor('auto')}
+            >
+              <RoundedBox
+                ref={(el) => { if (el) fbtnRefs.current[fk.id] = el }}
+                args={[0.32, 0.07, 0.17]}
+                radius={0.022}
+                smoothness={3}
+                material={mat}
+                castShadow
+              />
+            </group>
+            {/* Label next to button — stencilled on body */}
+            <Label
+              position={[-W / 2 + 0.85, H / 2 + 0.01, z]}
+              rotation={[-Math.PI / 2, 0, 0]}
+              size={0.038}
+              anchorY="middle"
+            >
+              {`${fk.id} · ${fk.label}`}
+            </Label>
+          </group>
+        )
+      })}
 
       {/* ── Tiny power LED next to the stencil POWER label ── */}
       <mesh
@@ -813,24 +1146,56 @@ export default function Device() {
       />
 
 
-      {/* ── Keyboard ── */}
-      <group position={[0.4, H / 2 + 0.001, 0.95]}>
-        <Keyboard />
+      {/* ── Keyboard — flat keys sit directly on the body ── */}
+      <group position={[0.55, H / 2 + 0.025, 0.85]}>
+        <Keyboard
+          pressedAtRef={pressedAtRef}
+          onChar={(ch) => {
+            if (powerState !== 'on') return
+            setInput((s) => (s.length < 48 ? s + ch : s))
+          }}
+          onAction={(action) => {
+            if (powerState !== 'on') return
+            if (action === 'enter') {
+              const entered = input
+              setInput('')
+              submit(entered)
+            } else if (action === 'backspace') {
+              setInput((s) => s.slice(0, -1))
+            }
+          }}
+        />
       </group>
 
 
 
 
       {/* ── Stenciled labels ── */}
-      <Label position={[-W / 2 + 0.45, H / 2 + 0.01, -1.0]} rotation={[-Math.PI / 2, 0, 0]} size={0.04}>
-        {`MODEL · LB MARK I\nSER · 0401 MMXXVI\nMADE IN PL`}
-      </Label>
-      <Label position={[W / 2 - 1.5, H / 2 + 0.01, 0.55]} rotation={[-Math.PI / 2, 0, 0]} size={0.025}>
-        TX/RX · CH-04
-      </Label>
-      <Label position={[-W / 2 + 0.50, H / 2 + 0.01, -1.20]} rotation={[-Math.PI / 2, 0, 0]} size={0.028} anchorY="middle">
+      {/* POWER (top-left, next to LED) */}
+      <Label position={[-W / 2 + 0.50, H / 2 + 0.01, -1.20]} rotation={[-Math.PI / 2, 0, 0]} size={0.035} anchorY="middle">
         POWER
       </Label>
+      {/* Compact serial-number style label */}
+      <Label position={[-W / 2 + 0.45, H / 2 + 0.01, -0.85]} rotation={[-Math.PI / 2, 0, 0]} size={0.028} anchorY="middle">
+        {'S/N · LB-MK1-0401-MMXXVI-PL'}
+      </Label>
+      {/* DO NOT REMOVE warning bottom-left */}
+      <Label position={[-W / 2 + 0.45, H / 2 + 0.01, D / 2 - 0.18]} rotation={[-Math.PI / 2, 0, 0]} size={0.028} anchorY="middle">
+        {'△ DO NOT REMOVE — SERVICE BY AUTHORISED TECH ONLY'}
+      </Label>
+      {/* Version stamp bottom-right — clickable, links to the commit on GitHub */}
+      <group
+        onClick={(e) => {
+          e.stopPropagation()
+          window.open(`https://github.com/bondarewicz/com/commit/${GIT_SHA}`, '_blank', 'noopener,noreferrer')
+        }}
+        onPointerOver={(e) => { e.stopPropagation(); setCursor('pointer')() }}
+        onPointerOut={setCursor('auto')}
+      >
+        <Label position={[W / 2 - 1.05, H / 2 + 0.01, D / 2 - 0.18]} rotation={[-Math.PI / 2, 0, 0]} size={0.028} anchorY="middle">
+          {`${GIT_SHA.toUpperCase()} · CE · 2026`}
+        </Label>
+      </group>
     </group>
   )
 }
