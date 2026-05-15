@@ -11,7 +11,14 @@ export default function App() {
         <span>bondarewicz.com</span>
       </div>
       <div className="overlay br">
-        <span>{GIT_SHA}</span>
+        <a
+          className="sha-link"
+          href={`https://github.com/bondarewicz/com/commit/${GIT_SHA}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {GIT_SHA}
+        </a>
       </div>
     </div>
   )
