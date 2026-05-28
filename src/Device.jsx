@@ -686,7 +686,7 @@ export default function Device() {
 
     ;(async () => {
       await delay(220)
-      push('lb-mk1 · rom 0401.MMXXVI')
+      push('lb-mk1 · rom 04-2026')
       await delay(160)
       await stepDots('post', 18, 'ok')
       await delay(90)
@@ -1068,7 +1068,7 @@ export default function Device() {
         size={0.030}
         anchorY="middle"
       >
-        {'LB-CRT · 9" · P/N 0401-MMXXVI'}
+        {'LB-CRT · 9" · P/N 04-2026'}
       </Label>
       {/* Screen — face up, slightly raised above bezel */}
       <group
@@ -1183,7 +1183,7 @@ export default function Device() {
       </Label>
       {/* Compact serial-number style label */}
       <Label position={[-W / 2 + 0.45, H / 2 + 0.01, -0.85]} rotation={[-Math.PI / 2, 0, 0]} size={0.028} anchorY="middle">
-        {'S/N · LB-MK1-0401-MMXXVI-PL'}
+        {'S/N · LB-MK1-04-2026-PL'}
       </Label>
       {/* DO NOT REMOVE warning bottom-left */}
       <Label position={[-W / 2 + 0.45, H / 2 + 0.01, D / 2 - 0.18]} rotation={[-Math.PI / 2, 0, 0]} size={0.028} anchorY="middle">
