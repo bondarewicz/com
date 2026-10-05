@@ -183,12 +183,15 @@ function Career() {
 }
 
 function Footer() {
-  const { setContactOpen } = useAgent()
+  function askAgain() {
+    focusConversation()
+    setTimeout(() => document.getElementById('question')?.focus({ preventScroll: true }), 400)
+  }
   return (
     <footer className="foot">
       <div className="wrap foot-in">
-        <p>Want to talk about a role or a project?</p>
-        <button type="button" className="btn-quiet light" onClick={() => { setContactOpen('form'); focusConversation() }}>Leave your details</button>
+        <p>Still curious? Ask me anything.</p>
+        <button type="button" className="btn-quiet light" onClick={askAgain}>Ask a question</button>
       </div>
     </footer>
   )

@@ -253,7 +253,6 @@ export function Thread() {
       {contactOpen && <ContactForm key={contactOpen} initial={contactOpen} messages={messages} onDone={() => setContactOpen(false)} />}
       <div className="thread-foot" ref={endRef}>
         {exchanges.length > 0 && <button type="button" className="inline muted" onClick={reset} disabled={busy}>Start a new conversation</button>}
-        {!contactOpen && exchanges.length > 0 && <button type="button" className="inline muted" onClick={() => setContactOpen('form')}>Leave your details</button>}
       </div>
     </div>
   )
