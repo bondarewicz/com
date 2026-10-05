@@ -7,12 +7,12 @@ const { contact } = profile
 const linkedin = contact.linkedin && !contact.linkedin.includes('[') ? contact.linkedin : null
 
 const HEADLINE = 'Don\'t read my CV. Ask it.'
-// no longer than the headline, so the typed text never wraps onto a second line
+// what a visitor would say to me; no longer than the headline, so it never wraps
 const EXAMPLES = [
-  'What did he build?',
-  'Is he a fit for our team?',
-  'What is he building now?',
-  'What role does he want?',
+  'What did you build?',
+  'Are you a fit for us?',
+  'What are you building?',
+  'What role do you want?',
 ]
 const STARTERS = [
   { label: 'what I built as engineer #1', question: 'What has Łukasz built in the past?' },
