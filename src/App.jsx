@@ -106,7 +106,7 @@ function Hero() {
           {input}
           <p className="starters">
             <span className={`presence ${online ? 'on' : ''}`} title={online ? 'The agent is online' : 'The agent is offline'} />
-            Answers come from my profile and GitHub. Try{' '}
+            Try{' '}
             {STARTERS.map((s, i) => (
               <span key={s.label}>
                 {i === STARTERS.length - 1 ? ' or ' : i > 0 ? ', ' : ''}
@@ -122,7 +122,7 @@ function Hero() {
           {input}
           <p className="starters small">
             <span className={`presence ${online ? 'on' : ''}`} />
-            Answers come from my profile and GitHub. Conversations are saved so I can follow up.
+            Conversations are saved.
           </p>
         </>
       )}
