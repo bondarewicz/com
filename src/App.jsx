@@ -22,7 +22,7 @@ const PLACEHOLDERS = [
 ]
 
 const TIMELINE = [
-  { step: '01', when: 'Past', title: '18 years shipping', sub: 'Fastlane → ParcelVision → Parcelhero', ...SUGGESTIONS[0] },
+  { step: '01', when: 'Past', title: 'Platforms from zero', sub: 'Fastlane → ParcelVision → Parcelhero', ...SUGGESTIONS[0] },
   { step: '02', when: 'Now', title: 'Agents, graded by evals', sub: 'dreamteam · kalman', ...SUGGESTIONS[1] },
   { step: '03', when: 'Next', title: 'Senior builder roles', sub: 'Staff · Founding · Forward Deployed · AI Platform', ...SUGGESTIONS[2] },
 ]
@@ -71,8 +71,8 @@ function Hero() {
 
   return (
     <section className="hero">
-      <h1>Engineer #1, twice. <em>Still building, now with agents.</em></h1>
-      <p className="lede">18 years taking products, platforms and teams from first commit to running business. Today I build alongside a team of AI agents I designed, graded by evals, not vibes.</p>
+      <h1>Don't read my CV. <em>Ask it.</em></h1>
+      <p className="lede">I'm Łukasz, a Technical Lead bringing AI into how teams build and ship, where it actually helps. My agent knows my work, from the platforms I built from zero to the agent systems I run today.</p>
 
       <form className="ask" onSubmit={submit}>
         <label htmlFor="ask" className="sr-only">Ask my agent a question or paste a job description</label>
