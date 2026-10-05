@@ -229,3 +229,10 @@ button:disabled { cursor: default; }
   .prompt { padding-bottom: 0; }
 }
 .saved { margin-top: 12px; font-size: 13px; color: var(--teal); }
+
+/* now building: production work leads, own-time projects follow */
+.quote { margin: -8px 0 32px; max-width: 760px; font-family: var(--font-serif); font-size: clamp(22px, 2.6vw, 28px); line-height: 1.3; color: var(--ink); border-left: 2px solid var(--teal-deep); padding-left: 20px; }
+.quote cite { display: block; margin-top: 10px; font-family: var(--font-mono); font-style: normal; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.feature.dark { flex-basis: 100%; }
+.feature-context { font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--teal-deep); }
+.feature.dark .feature-context { color: var(--teal); }

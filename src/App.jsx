@@ -111,17 +111,7 @@ function Hero() {
   )
 }
 
-function ProjectLinks({ p, dark }) {
-  if (!p.url) return <AskAbout className={dark ? 'btn ghost-dark' : 'btn accent'} label="Ask for a walkthrough" question={`Tell me about ${p.name}. Can I get a walkthrough?`} />
-  return (
-    <>
-      <a className={dark ? 'btn light' : 'btn'} href={p.url} target="_blank" rel="noreferrer">View on GitHub ↗</a>
-      {Object.entries(p.links || {}).map(([label, href]) => (
-        <a key={label} className={dark ? 'btn ghost-dark' : 'btn ghost'} href={href} target="_blank" rel="noreferrer">{label} ↗</a>
-      ))}
-    </>
-  )
-}
+const parcelhero = profile.experience.find((e) => e.id === 'parcelhero')
 
 function Now() {
   const { cited } = useAgent()
@@ -129,19 +119,27 @@ function Now() {
   return (
     <section id="now" className="block">
       <div className="label">Now building</div>
-      <h2>Teams of agents, and the factory around them</h2>
+      <h2>AI in production, and on my own time</h2>
+      <blockquote className="quote">
+        “{parcelhero.summary[0]}”
+        <cite>{parcelhero.title}, {parcelhero.company}</cite>
+      </blockquote>
       <div className="feature-row">
         {featured.map((p, i) => {
           const dark = i === 0
           return (
             <article key={p.id} data-source={p.id} className={`feature ${dark ? 'dark' : ''} ${cited.has(p.id) ? 'cited' : ''}`}>
-              <div className="feature-meta"><span>{p.repo}</span><span>{p.meta}</span></div>
+              <div className="feature-context">{p.context}</div>
+              <div className="feature-meta"><span>{p.repo || parcelhero.company}</span><span>{p.meta}</span></div>
               <h3>{p.name}</h3>
               <p>{p.summary}</p>
               <div className="tags">{p.tags.map((t) => <span key={t}>{t}</span>)}</div>
               <div className="actions">
-                <ProjectLinks p={p} dark={dark} />
-                {p.url && <AskAbout className={dark ? 'btn ghost-dark' : 'btn ghost'} question={`Tell me about ${p.name}. What problem does it solve and what's interesting about how it's built?`} />}
+                <AskAbout className="btn accent" label="Ask for a walkthrough" question={`Can I get a walkthrough of ${p.name}? What problem does it solve and how is it built?`} />
+                {p.url && <a className={dark ? 'btn ghost-dark' : 'btn ghost'} href={p.url} target="_blank" rel="noreferrer">GitHub ↗</a>}
+                {Object.entries(p.links || {}).map(([label, href]) => (
+                  <a key={label} className={dark ? 'btn ghost-dark' : 'btn ghost'} href={href} target="_blank" rel="noreferrer">{label} ↗</a>
+                ))}
               </div>
             </article>
           )
