@@ -178,9 +178,6 @@ function Footer() {
       <button type="button" className="linkish" onClick={() => { setOpen(true); setContactOpen('form') }}>Get in touch</button>
       <nav>
         {linkedin && <a href={linkedin} target="_blank" rel="noreferrer">LinkedIn ↗</a>}
-        <a href={contact.github} target="_blank" rel="noreferrer">GitHub ↗</a>
-        <a href={contact.npm} target="_blank" rel="noreferrer">npm ↗</a>
-        <a href={`mailto:${contact.email}`}>{contact.email}</a>
       </nav>
     </footer>
   )

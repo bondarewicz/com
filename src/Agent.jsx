@@ -94,7 +94,7 @@ export function AgentProvider({ children }) {
       else if (data.offer_contact) setContactOpen((c) => c || 'offer')
     } catch {
       setMessages((m) => [...m.slice(0, -1), { role: 'user', content: question, local: true },
-        { role: 'assistant', local: true, reply: { answer: `The assistant is offline. You can still leave your email, or write to ${profile.contact.email}.`, sources: [], followups: [] } }])
+        { role: 'assistant', local: true, reply: { answer: 'The assistant is offline right now. Leave your email below and Łukasz will get back to you.', sources: [], followups: [] } }])
       setContactOpen((c) => c || 'offer')
     } finally {
       setBusy(false)
@@ -195,7 +195,7 @@ function ContactForm({ messages, onDone, initial }) {
       if (!r.ok) return setState({ status: 'error', message: data.error || 'Could not send.' })
       setState({ status: 'sent', notified: data.notified })
     } catch {
-      setState({ status: 'error', message: `Could not send. Please email ${profile.contact.email}.` })
+      setState({ status: 'error', message: 'Could not send right now. Please try again in a minute.' })
     }
   }
 
