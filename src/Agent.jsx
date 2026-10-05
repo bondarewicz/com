@@ -5,10 +5,11 @@ export const API_BASE = import.meta.env.VITE_API_BASE || 'https://api.bondarewic
 const MAX_HISTORY = 20
 const JD_THRESHOLD = 400
 const STORE_KEY = 'lb-agent-conversation'
+const ID_KEY = 'lb-agent-conversation-id'
 
 const titles = Object.fromEntries([
   ...profile.projects.map((p) => [p.id, p.name]),
-  ...profile.experience.map((e) => [e.id, `${e.company}, ${e.start.slice(0, 4)}–${e.end ? e.end.slice(0, 4) : 'now'}`]),
+  ...profile.experience.map((e) => [e.id, `${e.company}, ${e.start.slice(0, 4)} to ${e.end ? e.end.slice(0, 4) : 'today'}`]),
 ])
 
 const AgentContext = createContext(null)
@@ -18,7 +19,6 @@ function load() {
   try { return JSON.parse(sessionStorage.getItem(STORE_KEY)) || [] } catch { return [] }
 }
 
-const ID_KEY = 'lb-agent-conversation-id'
 const newId = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2, 12)}`)
 
 // One id per conversation, so the API can keep the whole thread together.
@@ -43,15 +43,18 @@ function visitMeta() {
 
 // What the model sees of its own earlier turns: the answer plus any fit report.
 function asText(reply) {
-  const parts = [reply.answer]
+  const parts = [reply.answer, reply.ask]
   if (reply.fit?.strong?.length) parts.push('Strong matches: ' + reply.fit.strong.join('; '))
   if (reply.fit?.discuss?.length) parts.push('Worth discussing: ' + reply.fit.discuss.join('; '))
   return parts.filter(Boolean).join('\n')
 }
 
+export function focusConversation() {
+  document.getElementById('ask')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 export function AgentProvider({ children }) {
   const [messages, setMessages] = useState(load)
-  const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [remaining, setRemaining] = useState(null)
   const [contactOpen, setContactOpen] = useState(false)
@@ -63,10 +66,15 @@ export function AgentProvider({ children }) {
   const lastReply = [...messages].reverse().find((m) => m.role === 'assistant' && m.reply)?.reply
   const cited = new Set(lastReply?.sources || [])
 
+  function fail(question, answer, offer = true) {
+    setMessages((m) => [...m.slice(0, -1), { role: 'user', content: question, local: true },
+      { role: 'assistant', local: true, reply: { answer, sources: [], followups: [] } }])
+    if (offer) setContactOpen((c) => c || 'offer')
+  }
+
   async function ask(text) {
     const question = text.trim()
     if (!question || busy) return
-    setOpen(true)
     const next = [...messages, { role: 'user', content: question }]
     setMessages(next)
     setBusy(true)
@@ -82,20 +90,13 @@ export function AgentProvider({ children }) {
       })
       const data = await r.json().catch(() => ({}))
       if (typeof data.remaining === 'number') setRemaining(data.remaining)
-      if (!r.ok) {
-        // failures stay on screen but out of the history sent back to the model
-        setMessages((m) => [...m.slice(0, -1), { role: 'user', content: question, local: true },
-          { role: 'assistant', local: true, reply: { answer: data.answer || data.error || 'Something went wrong.', sources: [], followups: [] } }])
-        if (data.offer_contact) setContactOpen((c) => c || 'offer')
-        return
-      }
+      // failures stay on screen but out of the history sent back to the model
+      if (!r.ok) return fail(question, data.answer || data.error || 'That didn\'t go through. Try again in a moment.', data.offer_contact)
       setMessages((m) => [...m, { role: 'assistant', content: asText(data), reply: data }])
       if (data.contact_saved) setContactOpen(false)
       else if (data.offer_contact) setContactOpen((c) => c || 'offer')
     } catch {
-      setMessages((m) => [...m.slice(0, -1), { role: 'user', content: question, local: true },
-        { role: 'assistant', local: true, reply: { answer: 'The assistant is offline right now. Leave your email below and Łukasz will get back to you.', sources: [], followups: [] } }])
-      setContactOpen((c) => c || 'offer')
+      fail(question, 'The assistant is offline right now. Leave your details below and Łukasz will get back to you.')
     } finally {
       setBusy(false)
     }
@@ -107,7 +108,7 @@ export function AgentProvider({ children }) {
     setContactOpen(false)
   }
 
-  const value = { messages, open, setOpen, busy, ask, reset, remaining, cited, contactOpen, setContactOpen }
+  const value = { messages, busy, ask, reset, remaining, cited, contactOpen, setContactOpen }
   return <AgentContext.Provider value={value}>{children}</AgentContext.Provider>
 }
 
@@ -120,55 +121,43 @@ function scrollToSource(id) {
   el.classList.add('flash')
 }
 
-function Icon({ d, label }) {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden={label ? undefined : true}>
-      {d.map((p) => <path key={p} d={p} />)}
-    </svg>
-  )
-}
-export const ArrowUp = () => <Icon d={['M12 19V5', 'M6 11l6-6 6 6']} />
-const Close = () => <Icon d={['M6 6l12 12', 'M18 6L6 18']} />
-const Restart = () => <Icon d={['M3 12a9 9 0 1 0 3-6.7L3 8', 'M3 3v5h5']} />
-const Chat = () => <Icon d={['M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z']} />
-
-function UserBubble({ text }) {
+function Question({ text }) {
   const [expanded, setExpanded] = useState(false)
-  const isJd = text.length > JD_THRESHOLD
+  if (text.length <= JD_THRESHOLD) return <p className="ex-q">{text}</p>
   return (
-    <div className="bubble-user">
-      {isJd && <div className="bubble-label">Job description · {text.length.toLocaleString()} chars</div>}
-      {isJd && !expanded ? <>{text.slice(0, 180)}… <button type="button" className="linkish" onClick={() => setExpanded(true)}>show all</button></> : text}
-    </div>
+    <p className="ex-q">
+      Job description, {text.length.toLocaleString()} characters.{' '}
+      {expanded ? <span className="ex-jd">{text}</span> : <button type="button" className="inline" onClick={() => setExpanded(true)}>Show it</button>}
+    </p>
   )
 }
 
-function Reply({ reply, onFollowup, isLast }) {
+function Answer({ reply }) {
   const fit = reply.fit || { strong: [], discuss: [] }
-  const hasFit = fit.strong?.length || fit.discuss?.length
+  const sources = reply.sources || []
   return (
-    <div className="reply">
-      {reply.answer && <p>{reply.answer}</p>}
-      {hasFit ? (
-        <div className="fit">
-          <div className="fit-title">Fit report</div>
-          {fit.strong.map((s) => <div className="fit-row" key={s}><span className="dot good" aria-label="Strong match" />{s}</div>)}
-          {fit.discuss.map((s) => <div className="fit-row" key={s}><span className="dot ask" aria-label="Worth discussing" />{s}</div>)}
-        </div>
-      ) : null}
-      {reply.contact_saved && <div className="saved" role="status">✓ Contact details passed to Łukasz</div>}
-      {reply.sources?.length ? (
-        <div className="chips-src">
-          {reply.sources.map((id) => (
-            <button type="button" key={id} className="src" onClick={() => scrollToSource(id)}>{titles[id] || id}</button>
+    <div className="ex-a">
+      {reply.answer && (
+        <p className="answer">
+          {reply.answer}
+          {sources.map((id, i) => (
+            <sup key={id}><button type="button" className="fn" onClick={() => scrollToSource(id)} aria-label={`Source: ${titles[id] || id}`}>{i + 1}</button></sup>
           ))}
+        </p>
+      )}
+      {(fit.strong?.length > 0 || fit.discuss?.length > 0) && (
+        <div className="fit">
+          {fit.strong.length > 0 && <div><h4>Where he matches</h4><ul>{fit.strong.map((s) => <li key={s}>{s}</li>)}</ul></div>}
+          {fit.discuss.length > 0 && <div><h4>Worth discussing</h4><ul>{fit.discuss.map((s) => <li key={s}>{s}</li>)}</ul></div>}
         </div>
-      ) : null}
-      {isLast && reply.followups?.length ? (
-        <div className="followups">
-          {reply.followups.map((q) => <button type="button" key={q} onClick={() => onFollowup(q)}>{q}</button>)}
-        </div>
-      ) : null}
+      )}
+      {sources.length > 0 && (
+        <ol className="footnotes">
+          {sources.map((id) => <li key={id}><button type="button" className="inline" onClick={() => scrollToSource(id)}>{titles[id] || id}</button></li>)}
+        </ol>
+      )}
+      {reply.ask && <p className="ask-who">{reply.ask}</p>}
+      {reply.contact_saved && <p className="saved" role="status">Your details are with Łukasz. He'll reply by email.</p>}
     </div>
   )
 }
@@ -178,9 +167,7 @@ function ContactForm({ messages, onDone, initial }) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [note, setNote] = useState('')
-  const [attach, setAttach] = useState(true)
   const [state, setState] = useState({ status: 'idle' })
-  const transcript = messages.filter((m) => !m.local).map((m) => ({ role: m.role, content: m.content }))
 
   async function send(e) {
     e.preventDefault()
@@ -189,135 +176,94 @@ function ContactForm({ messages, onDone, initial }) {
       const r = await fetch(`${API_BASE}/agent/lead`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conversationId: conversationId(), name, email, note, transcript: attach ? transcript : [] }),
+        body: JSON.stringify({ conversationId: conversationId(), name, email, note, transcript: messages.filter((m) => !m.local).map((m) => ({ role: m.role, content: m.content })) }),
       })
       const data = await r.json().catch(() => ({}))
-      if (!r.ok) return setState({ status: 'error', message: data.error || 'Could not send.' })
-      setState({ status: 'sent', notified: data.notified })
+      if (!r.ok) return setState({ status: 'error', message: data.error || 'That didn\'t send. Check the email address and try again.' })
+      setState({ status: 'sent' })
     } catch {
-      setState({ status: 'error', message: 'Could not send right now. Please try again in a minute.' })
+      setState({ status: 'error', message: 'That didn\'t send. Try again in a minute.' })
     }
   }
 
   if (state.status === 'sent') {
-    return (
-      <div className="contact sent" role="status">
-        <strong>{state.notified ? 'Sent.' : 'Saved.'}</strong> {state.notified ? 'Łukasz just got a notification' : 'Łukasz will see it'} and will reply to {email}.
-        <button type="button" className="linkish" onClick={onDone}>Close</button>
-      </div>
-    )
+    return <div className="contact sent" role="status">Sent. Łukasz will reply to {email}. <button type="button" className="inline" onClick={onDone}>Close</button></div>
   }
-
   if (!expanded) {
     return (
       <div className="contact offer">
-        <span>Want Łukasz to reply?</span>
-        <button type="button" className="btn accent" onClick={() => setExpanded(true)}>Leave your email</button>
+        <span>Want Łukasz to get back to you?</span>
+        <button type="button" className="btn-quiet" onClick={() => setExpanded(true)}>Leave your details</button>
       </div>
     )
   }
-
   return (
     <form className="contact" onSubmit={send}>
-      <div className="contact-title">Want Łukasz to reply?</div>
+      <p className="contact-lead">Leave your details and Łukasz will reply by email. This conversation is included.</p>
       <div className="contact-row">
         <label>Name<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" maxLength={120} /></label>
-        <label>Email<input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="you@company.com" maxLength={254} /></label>
+        <label>Email<input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" maxLength={254} /></label>
       </div>
-      <label>Note (optional)<textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} placeholder="Role, project, timing…" /></label>
-      {transcript.length > 0 && (
-        <label className="check"><input type="checkbox" checked={attach} onChange={(e) => setAttach(e.target.checked)} /> Include this conversation</label>
-      )}
-      {state.status === 'error' && <div className="error" role="alert">{state.message}</div>}
-      <button type="submit" className="btn accent" disabled={state.status === 'sending'}>{state.status === 'sending' ? 'Sending…' : 'Send'}</button>
+      <label>What it's about <span className="opt">(optional)</span><textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} /></label>
+      {state.status === 'error' && <p className="error" role="alert">{state.message}</p>}
+      <div className="contact-actions">
+        <button type="submit" className="btn-quiet" disabled={state.status === 'sending'}>{state.status === 'sending' ? 'Sending' : 'Send details'}</button>
+        <button type="button" className="inline" onClick={onDone}>Cancel</button>
+      </div>
     </form>
   )
 }
 
-export function AgentDrawer() {
-  const { messages, open, setOpen, busy, ask, reset, remaining, contactOpen, setContactOpen } = useAgent()
-  const [draft, setDraft] = useState('')
-  const inputRef = useRef(null)
+/**
+ * The conversation, laid out like a printed interview: the visitor's question small,
+ * the agent's answer in the serif, sources as numbered footnotes.
+ */
+export function Thread() {
+  const { messages, busy, ask, reset, contactOpen, setContactOpen } = useAgent()
   const endRef = useRef(null)
+  const count = useRef(messages.length)
 
-  // on phones, focusing would pop the keyboard over the answer
-  useEffect(() => { if (open && window.matchMedia('(min-width: 721px)').matches) inputRef.current?.focus() }, [open])
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }) }, [messages.length, busy, contactOpen])
   useEffect(() => {
-    if (!open) return
-    const onKey = (e) => { if (e.key === 'Escape') setOpen(false) }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, setOpen])
+    if (messages.length !== count.current || busy) endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    count.current = messages.length
+  }, [messages.length, busy, contactOpen])
 
-  function submit(e) {
-    e?.preventDefault()
-    ask(draft)
-    setDraft('')
-  }
+  const exchanges = []
+  messages.forEach((m) => {
+    if (m.role === 'user') exchanges.push({ q: m.content, a: null })
+    else if (exchanges.length) exchanges[exchanges.length - 1].a = m.reply || { answer: m.content }
+  })
+  const last = exchanges[exchanges.length - 1]
+  const followups = !busy && last?.a?.followups?.length ? last.a.followups : []
 
-  const lastAssistant = messages.map((m, i) => (m.role === 'assistant' ? i : -1)).filter((i) => i >= 0).pop()
-
-  if (!open) {
-    return messages.length ? (
-      <button type="button" className="resume" onClick={() => setOpen(true)}>
-        <Chat /> Continue conversation <span className="count">{messages.filter((m) => m.role === 'user').length}</span>
-      </button>
-    ) : null
-  }
-
+  if (!exchanges.length && !contactOpen) return null
   return (
-    <aside className="drawer" aria-label="Conversation with Łukasz's agent">
-      <div className="drawer-head">
-        <div>
-          <div className="drawer-title">Ask Łukasz's agent</div>
-          <div className="drawer-sub">answers only from his profile and GitHub{remaining != null ? ` · ${remaining} left this hour` : ''}</div>
-        </div>
-        <div className="drawer-actions">
-          <button type="button" aria-label="New conversation" title="New conversation" onClick={reset} disabled={busy || !messages.length}><Restart /></button>
-          <button type="button" aria-label="Close" title="Close (Esc)" onClick={() => setOpen(false)}><Close /></button>
-        </div>
+    <div className="thread" aria-live="polite">
+      {exchanges.map((ex, i) => (
+        <article className="exchange" key={i}>
+          <Question text={ex.q} />
+          {ex.a ? <Answer reply={ex.a} /> : <p className="thinking" aria-label="Thinking"><span /><span /><span /></p>}
+        </article>
+      ))}
+      {followups.length > 0 && (
+        <p className="next">
+          Ask next:{' '}
+          {followups.map((q, i) => (
+            <span key={q}>{i > 0 && ', or '}<button type="button" className="inline" onClick={() => ask(q)}>{q.replace(/\?$/, '')}</button></span>
+          ))}
+          ?
+        </p>
+      )}
+      {contactOpen && <ContactForm key={contactOpen} initial={contactOpen} messages={messages} onDone={() => setContactOpen(false)} />}
+      <div className="thread-foot" ref={endRef}>
+        {exchanges.length > 0 && <button type="button" className="inline muted" onClick={reset} disabled={busy}>Start a new conversation</button>}
+        {!contactOpen && exchanges.length > 0 && <button type="button" className="inline muted" onClick={() => setContactOpen('form')}>Leave your details</button>}
       </div>
-
-      <div className="drawer-body" aria-live="polite">
-        {messages.length === 0 && !contactOpen && (
-          <div className="empty">
-            <p>Ask about his projects, the roles he fits, or paste a job description for an honest fit report.</p>
-          </div>
-        )}
-        {messages.map((m, i) => m.role === 'user'
-          ? <UserBubble key={i} text={m.content} />
-          : <Reply key={i} reply={m.reply || { answer: m.content }} isLast={i === lastAssistant && !busy} onFollowup={ask} />)}
-        {busy && <div className="thinking">Thinking<span>.</span><span>.</span><span>.</span></div>}
-        {contactOpen && <ContactForm key={contactOpen} initial={contactOpen} messages={messages} onDone={() => setContactOpen(false)} />}
-        <div ref={endRef} />
-      </div>
-
-      <form className="composer" onSubmit={submit}>
-        <div className="composer-box">
-          <label htmlFor="composer" className="sr-only">Message</label>
-          <textarea
-            id="composer"
-            ref={inputRef}
-            rows={1}
-            value={draft}
-            maxLength={6000}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) submit(e) }}
-            placeholder="Ask a follow-up, or paste a job description"
-          />
-          <button type="submit" aria-label="Send" disabled={busy || !draft.trim()}><ArrowUp /></button>
-        </div>
-        <div className="composer-foot">
-          <span>Conversations are saved so Łukasz can follow up.</span>
-          {!contactOpen && <button type="button" className="linkish" onClick={() => setContactOpen('form')}>Leave your email</button>}
-        </div>
-      </form>
-    </aside>
+    </div>
   )
 }
 
-export function AskAbout({ question, label = 'Ask about this', className = '' }) {
+export function AskAbout({ question, label = 'Ask for a walkthrough', className = 'ask-link' }) {
   const { ask, busy } = useAgent()
-  return <button type="button" className={`ask-about ${className}`} onClick={() => ask(question)} disabled={busy}>{label}</button>
+  return <button type="button" className={className} onClick={() => { focusConversation(); ask(question) }} disabled={busy}>{label}</button>
 }

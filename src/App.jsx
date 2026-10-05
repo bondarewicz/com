@@ -1,50 +1,48 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import profile from './profile.json'
-import { AgentProvider, AgentDrawer, AskAbout, ArrowUp, useAgent, API_BASE } from './Agent.jsx'
+import { AgentProvider, AskAbout, Thread, useAgent, focusConversation, API_BASE } from './Agent.jsx'
 
-// label is what the visitor reads (my voice); question is what goes to the agent
-const SUGGESTIONS = [
-  { label: 'What have I built in the past?', question: 'What has Łukasz built in the past?' },
-  { label: 'What am I building now?', question: 'What is Łukasz building now?' },
-  { label: 'What am I looking for next?', question: 'What is Łukasz looking for next?' },
-]
-
-const year = (d) => (d ? d.slice(0, 4) : 'now')
 const { contact } = profile
 // hidden until a real profile URL is set in profile.json
 const linkedin = contact.linkedin && !contact.linkedin.includes('[') ? contact.linkedin : null
 
-const PLACEHOLDERS = [
-  'Paste a job description for an honest fit report…',
+const HEADLINE = 'Don\'t read my CV. Ask it.'
+const EXAMPLES = [
   'What did he build as engineer #1?',
-  'Is he a fit for a Forward Deployed Engineer role?',
-  'How does dreamteam grade its agents?',
+  'Is he a fit for a forward deployed role?',
+  'How does Dream Team grade its agents?',
+  'What is he looking for next?',
+]
+const STARTERS = [
+  { label: 'what he built as engineer #1', question: 'What has Łukasz built in the past?' },
+  { label: 'what he\'s building now', question: 'What is Łukasz building now?' },
+  { label: 'what he\'s looking for next', question: 'What is Łukasz looking for next?' },
 ]
 
-const TIMELINE = [
-  { step: '01', when: 'Past', title: 'Platforms from zero', sub: 'Fastlane → ParcelVision → Parcelhero', ...SUGGESTIONS[0] },
-  { step: '02', when: 'Now', title: 'Agents, graded by evals', sub: 'dreamteam · kalman', ...SUGGESTIONS[1] },
-  { step: '03', when: 'Next', title: 'Senior builder roles', sub: 'Staff · Founding · Forward Deployed · AI Platform', ...SUGGESTIONS[2] },
-]
+const year = (d) => (d ? d.slice(0, 4) : 'today')
 
-// Types example questions into the placeholder until the visitor starts typing.
-function useTypedPlaceholder(phrases, paused) {
-  const [text, setText] = useState(phrases[0])
+/**
+ * The headline doubles as the input's placeholder: it holds, then types example questions,
+ * until the visitor clicks in. It's the one piece of motion on the page.
+ */
+function useHeadlinePlaceholder(paused) {
+  const [text, setText] = useState(HEADLINE)
   useEffect(() => {
     if (paused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    let i = 0, n = 0, deleting = false, timer
+    const phrases = [HEADLINE, ...EXAMPLES]
+    let i = 0, n = HEADLINE.length, deleting = true, timer
     const tick = () => {
       const phrase = phrases[i]
       n += deleting ? -2 : 1
       setText(phrase.slice(0, Math.max(n, 0)))
-      let delay = deleting ? 18 : 45
-      if (!deleting && n >= phrase.length) { deleting = true; delay = 1800 }
-      else if (deleting && n <= 0) { deleting = false; n = 0; i = (i + 1) % phrases.length; delay = 300 }
+      let delay = deleting ? 16 : 42
+      if (!deleting && n >= phrase.length) { deleting = true; delay = i === 0 ? 4200 : 2000 }
+      else if (deleting && n <= 0) { deleting = false; n = 0; i = (i + 1) % phrases.length; delay = 260 }
       timer = setTimeout(tick, delay)
     }
-    timer = setTimeout(tick, 1200)
+    timer = setTimeout(tick, 4200)
     return () => clearTimeout(timer)
-  }, [phrases, paused])
+  }, [paused])
   return text
 }
 
@@ -56,152 +54,168 @@ function useAgentOnline() {
   return online
 }
 
+function ArrowUp() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 19V5M6 11l6-6 6 6" />
+    </svg>
+  )
+}
+
 function Hero() {
-  const { ask, busy } = useAgent()
+  const { ask, busy, messages } = useAgent()
   const [draft, setDraft] = useState('')
   const [focused, setFocused] = useState(false)
-  const placeholder = useTypedPlaceholder(PLACEHOLDERS, focused || draft.length > 0)
+  const placeholder = useHeadlinePlaceholder(focused || draft.length > 0 || messages.length > 0)
   const online = useAgentOnline()
+  const inputRef = useRef(null)
 
   function submit(e) {
     e?.preventDefault()
+    if (!draft.trim()) return inputRef.current?.focus()
     ask(draft)
     setDraft('')
   }
 
+  const started = messages.length > 0
+  const input = (
+    <form className={`askbox ${started ? 'compact' : ''}`} onSubmit={submit}>
+      <label htmlFor="question" className="sr-only">Ask a question about my work, or paste a job description</label>
+      <textarea
+        id="question"
+        ref={inputRef}
+        rows={1}
+        value={draft}
+        maxLength={6000}
+        onChange={(e) => setDraft(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) submit(e) }}
+        placeholder={started ? 'Ask a follow-up, or paste a job description' : focused ? 'Ask about my work, or paste a job description' : placeholder}
+      />
+      <button type="submit" className="send" aria-label="Ask" disabled={busy}><ArrowUp /></button>
+    </form>
+  )
+
   return (
-    <section className="hero">
-      <h1>Don't read my CV. <em>Ask it.</em></h1>
-      <p className="lede">I'm Łukasz, a Technical Lead bringing AI into how teams build and ship, where it actually helps. My agent knows my work, from the platforms I built from zero to the agent systems I run today.</p>
-
-      <form className="ask" onSubmit={submit}>
-        <label htmlFor="ask" className="sr-only">Ask my agent a question or paste a job description</label>
-        <span className="prompt" aria-hidden="true">›</span>
-        <textarea
-          id="ask"
-          rows={1}
-          value={draft}
-          maxLength={6000}
-          onChange={(e) => setDraft(e.target.value)}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) submit(e) }}
-          placeholder={focused ? 'Ask anything, or paste a job description' : placeholder}
-        />
-        {online && (
-          <span className="ask-status" title="Agent online · answers from my CV and GitHub">
-            <span className="pulse" aria-hidden="true" /><span className="ask-status-text">Agent online</span>
-          </span>
-        )}
-        <button type="submit" aria-label="Ask" disabled={busy || !draft.trim()}><ArrowUp /></button>
-      </form>
-
-      <ol className="timeline">
-        {TIMELINE.map((t) => (
-          <li key={t.step}>
-            <button type="button" onClick={() => ask(t.question)} disabled={busy}>
-              <span className="t-step">{t.step} · {t.when}</span>
-              <span className="t-title">{t.title}</span>
-              <span className="t-sub">{t.sub}</span>
-              <span className="t-ask">{t.label} <span aria-hidden="true">→</span></span>
-            </button>
-          </li>
-        ))}
-      </ol>
+    <section className="hero" id="ask">
+      <h1 className="intro">I'm Łukasz, a Technical Lead bringing AI into how teams build and ship, where it actually helps.</h1>
+      {!started && (
+        <>
+          {input}
+          <p className="starters">
+            <span className={`presence ${online ? 'on' : ''}`} title={online ? 'The agent is online' : 'The agent is offline'} />
+            Answers come from my profile and GitHub. Try{' '}
+            {STARTERS.map((s, i) => (
+              <span key={s.label}>
+                {i === STARTERS.length - 1 ? ' or ' : i > 0 ? ', ' : ''}
+                <button type="button" className="inline" onClick={() => ask(s.question)} disabled={busy}>{s.label}</button>
+              </span>
+            ))}.
+          </p>
+        </>
+      )}
+      <Thread />
+      {started && (
+        <>
+          {input}
+          <p className="starters small">
+            <span className={`presence ${online ? 'on' : ''}`} />
+            Answers come from my profile and GitHub. Conversations are saved so I can follow up.
+          </p>
+        </>
+      )}
     </section>
   )
 }
 
-function Now() {
+function Work() {
   const { cited } = useAgent()
-  const featured = profile.projects.filter((p) => p.group === 'now')
+  const [work, ...own] = profile.projects.filter((p) => p.group === 'now')
   return (
-    <section id="now" className="block">
-      <div className="label">Now building</div>
-      <h2>AI in production, and on my own time</h2>
-      <div className="now-grid">
-        {featured.map((p, i) => (
-          <article key={p.id} data-source={p.id} className={`now-card ${i === 0 ? 'dark' : ''} ${cited.has(p.id) ? 'cited' : ''}`}>
-            <div className="now-context">{p.context}</div>
-            <h3>{p.name}</h3>
-            <p>{p.blurb}</p>
-            {(p.url || p.links) && (
-              <div className="now-links">
-                {p.url && <a className="text-link" href={p.url} target="_blank" rel="noreferrer">GitHub ↗</a>}
-                {Object.entries(p.links || {}).map(([label, href]) => (
-                  <a key={label} className="text-link" href={href} target="_blank" rel="noreferrer">{label} ↗</a>
-                ))}
+    <section className="section" id="work">
+      <h2>What I'm building</h2>
+      <div className="work">
+        <article data-source={work.id} className={`work-main ${cited.has(work.id) ? 'cited' : ''}`}>
+          <h3>At Parcelhero</h3>
+          <p className="lead">{work.blurb}</p>
+          <AskAbout question="Can I get a walkthrough of how Łukasz brings AI into how the team at Parcelhero builds and ships?" />
+        </article>
+        <div className="work-side">
+          <h3>On my own time</h3>
+          {own.map((p) => (
+            <article key={p.id} data-source={p.id} className={`project ${cited.has(p.id) ? 'cited' : ''}`}>
+              <h4>{p.name}</h4>
+              <p>{p.blurb}</p>
+              <div className="project-links">
+                <AskAbout question={`Can I get a walkthrough of ${p.name}? What problem does it solve and how is it built?`} />
+                {p.url && <a href={p.url} target="_blank" rel="noreferrer">Code on GitHub</a>}
+                {Object.entries(p.links || {}).map(([label, href]) => <a key={label} href={href} target="_blank" rel="noreferrer">{label}</a>)}
               </div>
-            )}
-            <div className="now-actions">
-              <AskAbout className="btn accent" label="Ask for a walkthrough" question={`Can I get a walkthrough of ${p.name}? What problem does it solve and how is it built?`} />
-            </div>
-          </article>
-        ))}
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   )
 }
 
-function ShortVersion() {
+function Career() {
   const { cited } = useAgent()
   return (
-    <section className="block short">
-      <div>
-        <div className="label">The short version</div>
-        <h2>Three companies, zero to running</h2>
-        {linkedin && <a href={linkedin} target="_blank" rel="noreferrer">Full history on LinkedIn ↗</a>}
-      </div>
-      <ol>
+    <section className="section" id="career">
+      <h2>Career</h2>
+      <ol className="timeline">
         {profile.experience.map((e) => (
           <li key={e.id} data-source={e.id} className={cited.has(e.id) ? 'cited' : ''}>
-            <span className="mono">{year(e.start)} – {year(e.end)}</span>
-            <span>{e.company} · {e.short}</span>
+            <span className="years">{year(e.start)} to {year(e.end)}</span>
+            <div>
+              <h3>{e.company}</h3>
+              <p>{e.title}. {e.short}.</p>
+            </div>
           </li>
         ))}
       </ol>
+      {linkedin && <a className="more" href={linkedin} target="_blank" rel="noreferrer">Full history on LinkedIn</a>}
     </section>
   )
 }
 
 function Footer() {
-  const { setOpen, setContactOpen } = useAgent()
+  const { setContactOpen } = useAgent()
   return (
     <footer className="foot">
-      <button type="button" className="linkish" onClick={() => { setOpen(true); setContactOpen('form') }}>Get in touch</button>
-      <nav>
-        {linkedin && <a href={linkedin} target="_blank" rel="noreferrer">LinkedIn ↗</a>}
-      </nav>
+      <div className="wrap foot-in">
+        <p>Want to talk about a role or a project?</p>
+        <button type="button" className="btn-quiet light" onClick={() => { setContactOpen('form'); focusConversation() }}>Leave your details</button>
+      </div>
     </footer>
   )
 }
 
 function Page() {
-  const { open } = useAgent()
   return (
-    <div className={`shell ${open ? 'with-drawer' : ''}`}>
-      <div className="band">
-        <div className="page">
-          <header className="nav">
-            <a href="/" className="brand">{profile.name}</a>
-            <nav>
-              <a className="sec" href="#now">Now</a>
-              {linkedin && <a href={linkedin} target="_blank" rel="noreferrer">LinkedIn ↗</a>}
-              <a href={contact.github} target="_blank" rel="noreferrer">GitHub ↗</a>
+    <>
+      <div className="night">
+        <div className="wrap">
+          <header className="top">
+            <a href="/" className="name">Łukasz Bondarewicz</a>
+            <nav aria-label="Sections">
+              <a href="#work">Work</a>
+              <a href="#career">Career</a>
+              <a href={contact.github} target="_blank" rel="noreferrer">GitHub</a>
+              {linkedin && <a href={linkedin} target="_blank" rel="noreferrer">LinkedIn</a>}
             </nav>
           </header>
           <Hero />
         </div>
       </div>
-      <div className="page">
-        <main>
-          <Now />
-          <ShortVersion />
-        </main>
-        <Footer />
-      </div>
-      <AgentDrawer />
-    </div>
+      <main className="wrap">
+        <Work />
+        <Career />
+      </main>
+      <Footer />
+    </>
   )
 }
 
