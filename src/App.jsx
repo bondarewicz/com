@@ -112,8 +112,6 @@ function Hero() {
   )
 }
 
-const parcelhero = profile.experience.find((e) => e.id === 'parcelhero')
-
 function Now() {
   const { cited } = useAgent()
   const featured = profile.projects.filter((p) => p.group === 'now')
@@ -121,30 +119,25 @@ function Now() {
     <section id="now" className="block">
       <div className="label">Now building</div>
       <h2>AI in production, and on my own time</h2>
-      <blockquote className="quote">
-        “{parcelhero.summary[0]}”
-        <cite>{parcelhero.title}, {parcelhero.company}</cite>
-      </blockquote>
-      <div className="feature-row">
-        {featured.map((p, i) => {
-          const dark = i === 0
-          return (
-            <article key={p.id} data-source={p.id} className={`feature ${dark ? 'dark' : ''} ${cited.has(p.id) ? 'cited' : ''}`}>
-              <div className="feature-context">{p.context}</div>
-              <div className="feature-meta"><span>{p.label || p.repo}</span><span>{p.meta}</span></div>
-              <h3>{p.name}</h3>
-              <p>{p.summary}</p>
-              <div className="tags">{p.tags.map((t) => <span key={t}>{t}</span>)}</div>
-              <div className="actions">
-                <AskAbout className="btn accent" label="Ask for a walkthrough" question={`Can I get a walkthrough of ${p.name}? What problem does it solve and how is it built?`} />
-                {p.url && <a className={dark ? 'btn ghost-dark' : 'btn ghost'} href={p.url} target="_blank" rel="noreferrer">GitHub ↗</a>}
+      <div className="now-grid">
+        {featured.map((p, i) => (
+          <article key={p.id} data-source={p.id} className={`now-card ${i === 0 ? 'dark' : ''} ${cited.has(p.id) ? 'cited' : ''}`}>
+            <div className="now-context">{p.context}</div>
+            <h3>{p.name}</h3>
+            <p>{p.blurb}</p>
+            {(p.url || p.links) && (
+              <div className="now-links">
+                {p.url && <a className="text-link" href={p.url} target="_blank" rel="noreferrer">GitHub ↗</a>}
                 {Object.entries(p.links || {}).map(([label, href]) => (
-                  <a key={label} className={dark ? 'btn ghost-dark' : 'btn ghost'} href={href} target="_blank" rel="noreferrer">{label} ↗</a>
+                  <a key={label} className="text-link" href={href} target="_blank" rel="noreferrer">{label} ↗</a>
                 ))}
               </div>
-            </article>
-          )
-        })}
+            )}
+            <div className="now-actions">
+              <AskAbout className="btn accent" label="Ask for a walkthrough" question={`Can I get a walkthrough of ${p.name}? What problem does it solve and how is it built?`} />
+            </div>
+          </article>
+        ))}
       </div>
     </section>
   )
