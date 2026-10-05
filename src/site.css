@@ -228,3 +228,4 @@ button:disabled { cursor: default; }
   .ask { align-items: center; }
   .prompt { padding-bottom: 0; }
 }
+.saved { margin-top: 12px; font-size: 13px; color: var(--teal); }

@@ -18,6 +18,29 @@ function load() {
   try { return JSON.parse(sessionStorage.getItem(STORE_KEY)) || [] } catch { return [] }
 }
 
+const ID_KEY = 'lb-agent-conversation-id'
+const newId = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2, 12)}`)
+
+// One id per conversation, so the API can keep the whole thread together.
+function conversationId(fresh = false) {
+  try {
+    let id = sessionStorage.getItem(ID_KEY)
+    if (!id || fresh) { id = newId(); sessionStorage.setItem(ID_KEY, id) }
+    return id
+  } catch { return newId() }
+}
+
+// Where the visitor came from; the API stores it with the first question.
+function visitMeta() {
+  return {
+    referrer: document.referrer,
+    landing: location.href,
+    language: navigator.language,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    screen: `${screen.width}x${screen.height}`,
+  }
+}
+
 // What the model sees of its own earlier turns: the answer plus any fit report.
 function asText(reply) {
   const parts = [reply.answer]
@@ -55,7 +78,7 @@ export function AgentProvider({ children }) {
       const r = await fetch(`${API_BASE}/agent/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: history.map((m) => ({ role: m.role, content: m.content })) }),
+        body: JSON.stringify({ conversationId: conversationId(), meta: visitMeta(), messages: history.map((m) => ({ role: m.role, content: m.content })) }),
       })
       const data = await r.json().catch(() => ({}))
       if (typeof data.remaining === 'number') setRemaining(data.remaining)
@@ -67,7 +90,8 @@ export function AgentProvider({ children }) {
         return
       }
       setMessages((m) => [...m, { role: 'assistant', content: asText(data), reply: data }])
-      if (data.offer_contact) setContactOpen((c) => c || 'offer')
+      if (data.contact_saved) setContactOpen(false)
+      else if (data.offer_contact) setContactOpen((c) => c || 'offer')
     } catch {
       setMessages((m) => [...m.slice(0, -1), { role: 'user', content: question, local: true },
         { role: 'assistant', local: true, reply: { answer: `The assistant is offline. You can still leave your email, or write to ${profile.contact.email}.`, sources: [], followups: [] } }])
@@ -78,6 +102,7 @@ export function AgentProvider({ children }) {
   }
 
   function reset() {
+    conversationId(true)
     setMessages([])
     setContactOpen(false)
   }
@@ -131,6 +156,7 @@ function Reply({ reply, onFollowup, isLast }) {
           {fit.discuss.map((s) => <div className="fit-row" key={s}><span className="dot ask" aria-label="Worth discussing" />{s}</div>)}
         </div>
       ) : null}
+      {reply.contact_saved && <div className="saved" role="status">✓ Contact details passed to Łukasz</div>}
       {reply.sources?.length ? (
         <div className="chips-src">
           {reply.sources.map((id) => (
@@ -163,7 +189,7 @@ function ContactForm({ messages, onDone, initial }) {
       const r = await fetch(`${API_BASE}/agent/lead`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, note, transcript: attach ? transcript : [] }),
+        body: JSON.stringify({ conversationId: conversationId(), name, email, note, transcript: attach ? transcript : [] }),
       })
       const data = await r.json().catch(() => ({}))
       if (!r.ok) return setState({ status: 'error', message: data.error || 'Could not send.' })
@@ -283,7 +309,7 @@ export function AgentDrawer() {
           <button type="submit" aria-label="Send" disabled={busy || !draft.trim()}><ArrowUp /></button>
         </div>
         <div className="composer-foot">
-          <span>Enter to send · Shift+Enter for a new line</span>
+          <span>Conversations are saved so Łukasz can follow up.</span>
           {!contactOpen && <button type="button" className="linkish" onClick={() => setContactOpen('form')}>Leave your email</button>}
         </div>
       </form>
