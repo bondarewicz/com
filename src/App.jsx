@@ -71,10 +71,6 @@ function Hero() {
 
   return (
     <section className="hero">
-      <div className={`status ${online ? 'on' : ''}`}>
-        <span className="pulse" aria-hidden="true" />
-        {online ? <>Agent online<span className="long"> · answers from my CV and GitHub</span></> : '18 years shipping · now with agents'}
-      </div>
       <h1>Engineer #1, twice. <em>Still building, now with agents.</em></h1>
       <p className="lede">18 years taking products, platforms and teams from first commit to running business. Today I build alongside a team of AI agents I designed, graded by evals, not vibes.</p>
 
@@ -92,6 +88,11 @@ function Hero() {
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) submit(e) }}
           placeholder={focused ? 'Ask anything, or paste a job description' : placeholder}
         />
+        {online && (
+          <span className="ask-status" title="Agent online · answers from my CV and GitHub">
+            <span className="pulse" aria-hidden="true" /><span className="ask-status-text">Agent online</span>
+          </span>
+        )}
         <button type="submit" aria-label="Ask" disabled={busy || !draft.trim()}><ArrowUp /></button>
       </form>
 
