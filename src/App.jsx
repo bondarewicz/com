@@ -7,11 +7,12 @@ const { contact } = profile
 const linkedin = contact.linkedin && !contact.linkedin.includes('[') ? contact.linkedin : null
 
 const HEADLINE = 'Don\'t read my CV. Ask it.'
+// no longer than the headline, so the typed text never wraps onto a second line
 const EXAMPLES = [
-  'What did he build as engineer #1?',
-  'Is he a fit for a forward deployed role?',
-  'How does Dream Team grade its agents?',
-  'What is he looking for next?',
+  'What did he build?',
+  'Is he a fit for our team?',
+  'What is he building now?',
+  'What role does he want?',
 ]
 const STARTERS = [
   { label: 'what he built as engineer #1', question: 'What has Łukasz built in the past?' },
@@ -80,7 +81,7 @@ function Hero() {
   const started = messages.length > 0
   const input = (
     <form className={`askbox ${started ? 'compact' : ''}`} onSubmit={submit}>
-      <label htmlFor="question" className="sr-only">Ask a question about my work, or paste a job description</label>
+      <label htmlFor="question" className="sr-only">Ask a question about my work</label>
       <textarea
         id="question"
         ref={inputRef}
@@ -91,7 +92,7 @@ function Hero() {
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) submit(e) }}
-        placeholder={started ? 'Ask a follow-up, or paste a job description' : focused ? 'Ask about my work, or paste a job description' : placeholder}
+        placeholder={started ? 'Ask a follow-up' : focused ? 'Ask about my work' : placeholder}
       />
       <button type="submit" className="send" aria-label="Ask" disabled={busy}><ArrowUp /></button>
     </form>

@@ -137,14 +137,7 @@ function Answer({ reply }) {
   const sources = reply.sources || []
   return (
     <div className="ex-a">
-      {reply.answer && (
-        <p className="answer">
-          {reply.answer}
-          {sources.map((id, i) => (
-            <sup key={id}><button type="button" className="fn" onClick={() => scrollToSource(id)} aria-label={`Source: ${titles[id] || id}`}>{i + 1}</button></sup>
-          ))}
-        </p>
-      )}
+      {reply.answer && <p className="answer">{reply.answer}</p>}
       {(fit.strong?.length > 0 || fit.discuss?.length > 0) && (
         <div className="fit">
           {fit.strong.length > 0 && <div><h4>Where he matches</h4><ul>{fit.strong.map((s) => <li key={s}>{s}</li>)}</ul></div>}
@@ -152,9 +145,12 @@ function Answer({ reply }) {
         </div>
       )}
       {sources.length > 0 && (
-        <ol className="footnotes">
-          {sources.map((id) => <li key={id}><button type="button" className="inline" onClick={() => scrollToSource(id)}>{titles[id] || id}</button></li>)}
-        </ol>
+        <p className="sources">
+          Sources:{' '}
+          {sources.map((id, i) => (
+            <span key={id}>{i > 0 && ', '}<button type="button" className="inline" onClick={() => scrollToSource(id)}>{titles[id] || id}</button></span>
+          ))}
+        </p>
       )}
       {reply.ask && <p className="ask-who">{reply.ask}</p>}
       {reply.contact_saved && <p className="saved" role="status">Your details are with Łukasz. He'll reply by email.</p>}
@@ -216,7 +212,7 @@ function ContactForm({ messages, onDone, initial }) {
 
 /**
  * The conversation, laid out like a printed interview: the visitor's question small,
- * the agent's answer in the serif, sources as numbered footnotes.
+ * the agent's answer in the serif, its sources on one quiet line beneath.
  */
 export function Thread() {
   const { messages, busy, ask, reset, contactOpen, setContactOpen } = useAgent()

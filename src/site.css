@@ -82,13 +82,9 @@ button:disabled { cursor: default; opacity: 0.5; }
 .ex-q { margin: 0 0 12px; color: var(--night-muted); font-size: 16px; overflow-wrap: anywhere; }
 .ex-jd { display: block; margin-top: 8px; white-space: pre-wrap; font-size: 14px; }
 .answer { margin: 0; font: 400 clamp(22px, 2.3vw, 26px)/1.45 var(--serif); color: var(--night-text); white-space: pre-wrap; max-width: var(--measure); }
-sup { line-height: 0; }
-.fn { margin-left: 3px; padding: 0 2px; border: 0; background: none; color: var(--teal); font: 600 13px var(--sans); }
-.fn:hover { text-decoration: underline; }
-.footnotes { margin: 16px 0 0; padding: 0; list-style: none; counter-reset: fn; display: flex; flex-wrap: wrap; gap: 4px 20px; font-size: 14px; color: var(--night-muted); }
-.footnotes li { counter-increment: fn; }
-.footnotes li::before { content: counter(fn); color: var(--teal); font-weight: 600; margin-right: 6px; }
-.footnotes .inline { text-decoration-color: var(--night-line); }
+.sources { margin: 14px 0 0; font-size: 14px; color: var(--night-muted); }
+.sources .inline { color: var(--night-muted); text-decoration-color: var(--night-line); }
+.sources .inline:hover { color: var(--night-text); }
 
 .fit { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-top: 22px; padding: 20px 22px; border-radius: 14px; background: var(--night-2); font-size: 15px; }
 .fit h4 { margin: 0 0 8px; font-size: 14px; font-weight: 600; color: var(--teal); }
