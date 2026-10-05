@@ -137,6 +137,7 @@ function Answer({ reply }) {
   const sources = reply.sources || []
   return (
     <div className="ex-a">
+      <p className="speaker">My assistant</p>
       {reply.answer && <p className="answer">{reply.answer}</p>}
       {(fit.strong?.length > 0 || fit.discuss?.length > 0) && (
         <div className="fit">
@@ -183,19 +184,19 @@ function ContactForm({ messages, onDone, initial }) {
   }
 
   if (state.status === 'sent') {
-    return <div className="contact sent" role="status">Sent. Łukasz will reply to {email}. <button type="button" className="inline" onClick={onDone}>Close</button></div>
+    return <div className="contact sent" role="status">Sent. I'll reply to {email}. <button type="button" className="inline" onClick={onDone}>Close</button></div>
   }
   if (!expanded) {
     return (
       <div className="contact offer">
-        <span>Want Łukasz to get back to you?</span>
+        <span>Want me to get back to you?</span>
         <button type="button" className="btn-quiet" onClick={() => setExpanded(true)}>Leave your details</button>
       </div>
     )
   }
   return (
     <form className="contact" onSubmit={send}>
-      <p className="contact-lead">Leave your details and Łukasz will reply by email. This conversation is included.</p>
+      <p className="contact-lead">Leave your details and I'll reply by email. This conversation is included.</p>
       <div className="contact-row">
         <label>Name<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" maxLength={120} /></label>
         <label>Email<input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" maxLength={254} /></label>

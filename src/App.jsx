@@ -15,9 +15,9 @@ const EXAMPLES = [
   'What role does he want?',
 ]
 const STARTERS = [
-  { label: 'what he built as engineer #1', question: 'What has Łukasz built in the past?' },
-  { label: 'what he\'s building now', question: 'What is Łukasz building now?' },
-  { label: 'what he\'s looking for next', question: 'What is Łukasz looking for next?' },
+  { label: 'what I built as engineer #1', question: 'What has Łukasz built in the past?' },
+  { label: 'what I\'m building now', question: 'What is Łukasz building now?' },
+  { label: 'what I\'m looking for next', question: 'What is Łukasz looking for next?' },
 ]
 
 const year = (d) => (d ? d.slice(0, 4) : 'today')
@@ -190,7 +190,7 @@ function Footer() {
   return (
     <footer className="foot">
       <div className="wrap foot-in">
-        <p>Still curious? Ask me anything.</p>
+        <p>Still curious? Ask another question.</p>
         <button type="button" className="btn-quiet light" onClick={askAgain}>Ask a question</button>
       </div>
     </footer>

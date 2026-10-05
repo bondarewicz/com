@@ -81,6 +81,7 @@ button:disabled { cursor: default; opacity: 0.5; }
 .exchange + .exchange { margin-top: 44px; padding-top: 36px; border-top: 1px solid var(--night-line); }
 .ex-q { margin: 0 0 12px; color: var(--night-muted); font-size: 16px; overflow-wrap: anywhere; }
 .ex-jd { display: block; margin-top: 8px; white-space: pre-wrap; font-size: 14px; }
+.speaker { margin: 0 0 6px; font-size: 13px; font-weight: 500; color: var(--teal); }
 .answer { margin: 0; font: 400 clamp(22px, 2.3vw, 26px)/1.45 var(--serif); color: var(--night-text); white-space: pre-wrap; max-width: var(--measure); }
 .sources { margin: 14px 0 0; font-size: 14px; color: var(--night-muted); }
 .sources .inline { color: var(--night-muted); text-decoration-color: var(--night-line); }
