@@ -130,7 +130,7 @@ function Now() {
           return (
             <article key={p.id} data-source={p.id} className={`feature ${dark ? 'dark' : ''} ${cited.has(p.id) ? 'cited' : ''}`}>
               <div className="feature-context">{p.context}</div>
-              <div className="feature-meta"><span>{p.repo || parcelhero.company}</span><span>{p.meta}</span></div>
+              <div className="feature-meta"><span>{p.label || p.repo}</span><span>{p.meta}</span></div>
               <h3>{p.name}</h3>
               <p>{p.summary}</p>
               <div className="tags">{p.tags.map((t) => <span key={t}>{t}</span>)}</div>
