@@ -7,8 +7,8 @@
     },
     {
       "id": "ai-in-production",
-      "title": "Introduce AI into production",
-      "text": "I've shipped LLMs and embeddings to production, backed by agent observability, and run experiments against real datasets to help with prompt engineering."
+      "title": "Ship AI agents",
+      "text": "I've shipped agents and embeddings to production, backed by observability, and run experiments against real datasets to help with prompt engineering."
     },
     {
       "id": "modernise",
