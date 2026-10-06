@@ -94,7 +94,7 @@ function About() {
       <h2>I help teams turn a first idea into software they can rely on.</h2>
       <div className="about-body">
         <p>Twice, I've been the first engineer a company hired. Both times it meant listening closely to what the business needed, building the pipelines and infrastructure a growing team could rely on, and helping new engineers find their feet as the team grew.</p>
-        <p>Most recently, I led the technical direction of a logistics platform I'd built from its foundations, and brought AI into one of its core parts.</p>
+        <p>Most recently, I helped set the technical direction of a logistics platform I'd built from its foundations, and brought AI into one of its core parts.</p>
         <p>If your team is starting something new, or wants to ship with more confidence, I'd love to hear about it.</p>
         <AskAbout label="Ask about my background" question="Tell me about Łukasz's background and how he works." />
       </div>
