@@ -101,9 +101,6 @@ button:disabled { cursor: default; opacity: 0.5; }
 .ex-jd { display: block; margin-top: 8px; white-space: pre-wrap; font-size: 14px; }
 .speaker { margin: 0 0 6px; font-size: 13px; font-weight: 500; color: var(--teal); }
 .answer { margin: 0; font: 400 clamp(22px, 2.3vw, 26px)/1.45 var(--serif); color: var(--night-text); white-space: pre-wrap; max-width: var(--measure); }
-.sources { margin: 14px 0 0; font-size: 14px; color: var(--night-muted); }
-.sources .inline { color: var(--night-muted); text-decoration-color: var(--night-line); }
-.sources .inline:hover { color: var(--night-text); }
 
 .fit { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-top: 22px; padding: 20px 22px; border-radius: 14px; background: var(--night-2); font-size: 15px; }
 .fit h4 { margin: 0 0 8px; font-size: 14px; font-weight: 600; color: var(--teal); }
@@ -160,8 +157,6 @@ button:disabled { cursor: default; opacity: 0.5; }
 .capability p { margin: 0 0 16px; max-width: 48ch; color: #3A4150; line-height: 1.65; }
 .ask-link { background: none; border: 0; padding: 0; color: var(--teal-deep); font-weight: 500; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
 
-/* cited by the agent: a quiet wash, so the answer's sources are easy to find */
-.cited { background: var(--teal-wash); }
 .flash { animation: flash 1.6s ease; }
 @keyframes flash { 0%, 30% { background: #CDE7DF; } }
 

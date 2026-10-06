@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
-import profile from './profile.json'
 
 export const API_BASE = import.meta.env.VITE_API_BASE || 'https://api.bondarewicz.com/v1'
 const MAX_HISTORY = 20
@@ -7,11 +6,6 @@ const JD_THRESHOLD = 400
 const STORE_KEY = 'lb-agent-conversation'
 const ID_KEY = 'lb-agent-conversation-id'
 const CONTACT_PROMPT = 'Happy to pass a message to Łukasz. What\'s your name, the best email to reach you, and what would you like to talk about?'
-
-const titles = Object.fromEntries([
-  ...profile.projects.map((p) => [p.id, p.name]),
-  ...profile.experience.map((e) => [e.id, `${e.company}, ${e.start.slice(0, 4)} to ${e.end ? e.end.slice(0, 4) : 'today'}`]),
-])
 
 const AgentContext = createContext(null)
 export const useAgent = () => useContext(AgentContext)
@@ -71,12 +65,9 @@ export function AgentProvider({ children }) {
     try { sessionStorage.setItem(STORE_KEY, JSON.stringify(messages)) } catch {}
   }, [messages])
 
-  const lastReply = [...messages].reverse().find((m) => m.role === 'assistant' && m.reply)?.reply
-  const cited = new Set(lastReply?.sources || [])
-
   function fail(question, answer, offer = true) {
     setMessages((m) => [...m.slice(0, -1), { role: 'user', content: question, local: true },
-      { role: 'assistant', local: true, reply: { answer, sources: [], followups: [] } }])
+      { role: 'assistant', local: true, reply: { answer, followups: [] } }])
     if (offer) setContactOpen((c) => c || 'offer')
   }
 
@@ -125,17 +116,8 @@ export function AgentProvider({ children }) {
     setContactOpen(false)
   }
 
-  const value = { messages, busy, ask, contact, reset, remaining, cited, contactOpen, setContactOpen, open, setOpen }
+  const value = { messages, busy, ask, contact, reset, remaining, contactOpen, setContactOpen, open, setOpen }
   return <AgentContext.Provider value={value}>{children}</AgentContext.Provider>
-}
-
-function scrollToSource(id) {
-  const el = document.querySelector(`[data-source="${id}"]`)
-  if (!el) return
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  el.classList.remove('flash')
-  void el.offsetWidth
-  el.classList.add('flash')
 }
 
 function Question({ text }) {
@@ -151,7 +133,6 @@ function Question({ text }) {
 
 function Answer({ reply }) {
   const fit = reply.fit || { strong: [], discuss: [] }
-  const sources = reply.sources || []
   return (
     <div className="ex-a">
       <p className="speaker">My assistant</p>
@@ -161,14 +142,6 @@ function Answer({ reply }) {
           {fit.strong.length > 0 && <div><h4>Where he matches</h4><ul>{fit.strong.map((s) => <li key={s}>{s}</li>)}</ul></div>}
           {fit.discuss.length > 0 && <div><h4>Worth discussing</h4><ul>{fit.discuss.map((s) => <li key={s}>{s}</li>)}</ul></div>}
         </div>
-      )}
-      {sources.length > 0 && (
-        <p className="sources">
-          Sources:{' '}
-          {sources.map((id, i) => (
-            <span key={id}>{i > 0 && ', '}<button type="button" className="inline" onClick={() => scrollToSource(id)}>{titles[id] || id}</button></span>
-          ))}
-        </p>
       )}
       {reply.ask && <p className="ask-who">{reply.ask}</p>}
       {reply.contact_saved && <p className="saved" role="status">Your details are with Łukasz. He'll reply by email.</p>}
@@ -230,7 +203,7 @@ function ContactForm({ messages, onDone, initial }) {
 
 /**
  * The conversation, laid out like a printed interview: the visitor's question small,
- * the agent's answer in the serif, its sources on one quiet line beneath.
+ * the agent's answer in the serif.
  */
 export function Thread() {
   const { messages, busy, ask, contactOpen, setContactOpen } = useAgent()
