@@ -169,6 +169,10 @@ button:disabled { cursor: default; opacity: 0.5; }
 .foot { margin-top: 128px; background: var(--night); color: var(--night-text); }
 .foot-in { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px; padding-top: 56px; padding-bottom: 56px; }
 .foot p { margin: 0; font: 400 clamp(28px, 3.4vw, 40px)/1.15 var(--serif); }
+.privacy { padding-bottom: 32px; }
+.privacy small { font-size: 13px; line-height: 1.5; color: var(--night-text); opacity: .62; }
+.privacy button { padding: 0; border: 0; background: none; font: inherit; color: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.privacy button:hover, .privacy button:focus-visible { opacity: 1; color: var(--teal, #7FC8B6); }
 
 /* ───── small screens ───── */
 /* about: a plain introduction in my own words */

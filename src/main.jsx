@@ -2,6 +2,7 @@ import React from 'react'
 import { createRoot, hydrateRoot } from 'react-dom/client'
 import App from './App.jsx'
 import './site.css'
+import { startStats } from './stats.js'
 
 const root = document.getElementById('root')
 const app = (
@@ -14,3 +15,5 @@ const app = (
 // (in dev the root only holds a placeholder comment, so check for elements)
 if (root.firstElementChild) hydrateRoot(root, app)
 else createRoot(root).render(app)
+
+startStats()
