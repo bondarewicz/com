@@ -6,6 +6,7 @@ const MAX_HISTORY = 20
 const JD_THRESHOLD = 400
 const STORE_KEY = 'lb-agent-conversation'
 const ID_KEY = 'lb-agent-conversation-id'
+const CONTACT_PROMPT = 'Happy to pass a message to Łukasz. What\'s your name, the best email to reach you, and what would you like to talk about?'
 
 const titles = Object.fromEntries([
   ...profile.projects.map((p) => [p.id, p.name]),
@@ -110,13 +111,21 @@ export function AgentProvider({ children }) {
     }
   }
 
+  // "Contact me": open the conversation with the assistant asking for their details.
+  // Shown only, never sent: whatever they type next starts the conversation, and the API
+  // turns an email address in it into a lead.
+  function contact() {
+    setOpen(true)
+    setMessages((m) => (m[m.length - 1]?.contactPrompt ? m : [...m, { role: 'assistant', local: true, contactPrompt: true, reply: { answer: CONTACT_PROMPT } }]))
+  }
+
   function reset() {
     conversationId(true)
     setMessages([])
     setContactOpen(false)
   }
 
-  const value = { messages, busy, ask, reset, remaining, cited, contactOpen, setContactOpen, open, setOpen }
+  const value = { messages, busy, ask, contact, reset, remaining, cited, contactOpen, setContactOpen, open, setOpen }
   return <AgentContext.Provider value={value}>{children}</AgentContext.Provider>
 }
 
@@ -236,7 +245,9 @@ export function Thread() {
   const exchanges = []
   messages.forEach((m) => {
     if (m.role === 'user') exchanges.push({ q: m.content, a: null })
-    else if (exchanges.length) exchanges[exchanges.length - 1].a = m.reply || { answer: m.content }
+    // an answer with no question before it (the contact prompt) gets an exchange of its own
+    else if (!exchanges.length || exchanges[exchanges.length - 1].a) exchanges.push({ q: null, a: m.reply || { answer: m.content } })
+    else exchanges[exchanges.length - 1].a = m.reply || { answer: m.content }
   })
   const last = exchanges[exchanges.length - 1]
   const followups = !busy && last?.a?.followups?.length ? last.a.followups : []
@@ -245,7 +256,7 @@ export function Thread() {
     <div className="thread" aria-live="polite">
       {exchanges.map((ex, i) => (
         <article className="exchange" key={i}>
-          <Question text={ex.q} />
+          {ex.q && <Question text={ex.q} />}
           {ex.a ? <Answer reply={ex.a} /> : <p className="thinking" aria-label="Thinking"><span /><span /><span /></p>}
         </article>
       ))}
@@ -385,7 +396,7 @@ export function ConversationView({ starters }) {
       </div>
       <div className="convo-compose">
         <div className="convo-column">
-          <Composer placeholder={messages.length ? 'Ask a follow-up' : 'Ask about my work'} autoFocus />
+          <Composer placeholder={messages[messages.length - 1]?.contactPrompt ? 'Your name, email and what it\'s about' : messages.length ? 'Ask a follow-up' : 'Ask about my work'} autoFocus />
           <p className="saved-note">Conversations are saved.</p>
         </div>
       </div>

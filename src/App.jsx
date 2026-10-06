@@ -119,13 +119,12 @@ function Work() {
 }
 
 function Footer() {
-  const { setOpen } = useAgent()
-  const askAgain = () => setOpen(true)
+  const { contact } = useAgent()
   return (
     <footer className="foot">
       <div className="wrap foot-in">
         <p>Still curious?</p>
-        <button type="button" className="pill" onClick={askAgain}>Ask me anything</button>
+        <button type="button" className="pill" onClick={contact}>Contact me</button>
       </div>
     </footer>
   )
