@@ -62,7 +62,7 @@ function Hero() {
     <section className="hero">
       <div className="hero-stack">
         <p className="greeting">Hi, I'm Łukasz.</p>
-        <h1>Nearly two decades of helping teams ship better software, now with AI where it actually helps.</h1>
+        <h1>I've spent nearly two decades helping teams ship better software, and now I bring in AI where it actually helps.</h1>
 
         <aside className="assistant" id="ask" aria-label="Ask me anything">
           <h2><span className={`presence ${online ? 'on' : ''}`} title={online ? 'Online' : 'Offline'} />Ask me anything</h2>
