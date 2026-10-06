@@ -21,7 +21,7 @@ To share the dev server through ngrok, run `NGROK=1 npm run dev` so live reload 
 npm run sync-profile
 ```
 
-It copies only the public part: projects marked `"public": false` (and anything pointing at them) stay out of the site's bundle.
+It copies only what the page shows, the capabilities and the GitHub and LinkedIn links, so nothing else from the profile (employers, dates, projects) ends up in the site's code.
 
 ## Build and deploy
 
@@ -40,7 +40,7 @@ Every push to `master` builds and publishes to GitHub Pages with `.github/workfl
 | `src/App.jsx` | The page: header with the wordmark, hero (greeting, headline, what I do, Ask me anything), About me, What I do, footer |
 | `src/Agent.jsx` | Conversation state, the question box, and the full-screen conversation view: answers labelled "My assistant", sources, fit reports for job descriptions, follow-ups, the contact form when it's needed |
 | `src/site.css` | All styles. Night navy for the hero and conversation, paper for reading, teal for interaction, amber for the one primary action |
-| `src/profile.json` | Public part of the agent's profile (see "Profile") |
+| `src/profile.json` | Capabilities and links, copied from the agent's profile (see "Profile") |
 | `index.html` | Title, description, canonical URL, social preview tags, structured data (schema.org Person), fonts (Instrument Serif, Geist) |
 | `public/` | `og.png` social preview, favicons, `robots.txt`, `sitemap.xml`, `CNAME` |
 
