@@ -120,6 +120,9 @@ function Work() {
 
 function Footer() {
   const { contact } = useAgent()
+  // pre-rendered with the build year, then the visitor's current year, so it never goes stale
+  const [year, setYear] = useState(__BUILD_YEAR__)
+  useEffect(() => setYear(new Date().getFullYear()), [])
   return (
     <footer className="foot">
       <div className="wrap foot-in">
@@ -127,7 +130,7 @@ function Footer() {
         <button type="button" className="pill" onClick={contact}>Contact me</button>
       </div>
       <div className="wrap">
-        <p className="rights">All rights reserved © Łukasz Bondarewicz 2026</p>
+        <p className="rights">All rights reserved © Łukasz Bondarewicz {year}</p>
       </div>
     </footer>
   )
