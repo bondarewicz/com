@@ -13,12 +13,12 @@
     {
       "id": "modernise",
       "title": "Modernise infrastructure",
-      "text": "I led the platform's move to Kubernetes, helped migrate it from GCP to Azure, and work with current .NET versions."
+      "text": "I led the platform's move to Kubernetes, helped migrate it from GCP to Azure, and recently worked with the .NET stack."
     },
     {
       "id": "direction",
-      "title": "Set technical direction",
-      "text": "I design distributed systems that stay up and scale when they need to, and build a culture where quality is built in from the start, not patched in after."
+      "title": "Help set technical direction",
+      "text": "I design distributed systems that stay up and scale when they need to, and champion the best practices that keep them reliable."
     }
   ],
   "contact": {
