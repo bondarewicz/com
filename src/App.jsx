@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import profile from './profile.json'
 import { AgentProvider, AskAbout, Composer, ConversationView, useAgent, API_BASE } from './Agent.jsx'
-import { setStatsOptOut, statsOptedOut } from './stats.js'
 
 const { contact } = profile
 // hidden until a real profile URL is set in profile.json
@@ -122,26 +121,11 @@ function Work() {
 function Footer() {
   const { setOpen } = useAgent()
   const askAgain = () => setOpen(true)
-  // read after hydration: the pre-rendered page can't know a visitor's choice
-  const [optedOut, setOptedOut] = useState(false)
-  useEffect(() => setOptedOut(statsOptedOut()), [])
-  const toggleStats = () => {
-    setStatsOptOut(!optedOut)
-    setOptedOut(!optedOut)
-  }
   return (
     <footer className="foot">
       <div className="wrap foot-in">
         <p>Still curious?</p>
         <button type="button" className="pill" onClick={askAgain}>Ask me anything</button>
-      </div>
-      <div className="wrap privacy">
-        <small>
-          {optedOut
-            ? 'You\'re not counted in visit stats on this browser. '
-            : 'I count visits without cookies, on my own server, and never see who you are. '}
-          <button type="button" onClick={toggleStats}>{optedOut ? 'Count my visits again' : 'Don\'t count me'}</button>
-        </small>
       </div>
     </footer>
   )
