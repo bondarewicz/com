@@ -8,7 +8,7 @@
     {
       "id": "ai-in-production",
       "title": "Introduce AI into production",
-      "text": "I've put LLMs and embeddings into production, backed by observability, evals and experiments."
+      "text": "I've shipped LLMs and embeddings to production, backed by observability, evals and experiments."
     },
     {
       "id": "modernise",
