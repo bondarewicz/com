@@ -143,9 +143,7 @@ button:disabled { cursor: default; opacity: 0.5; }
 
 /* ───── paper: what he's building, career ───── */
 .section { padding: 112px 0 0; }
-.section h2 { margin: 0 0 48px; font: 400 clamp(40px, 5.6vw, 64px)/1.02 var(--serif); letter-spacing: -0.01em; }
-/* two-tone headings: the statement, then a softer second line */
-.section h2 span { display: block; color: var(--muted); }
+.section h2 { margin: 0 0 40px; max-width: 22ch; font: 400 clamp(36px, 5vw, 56px)/1.06 var(--serif); letter-spacing: -0.01em; text-wrap: balance; }
 
 .arrow-action { display: inline-flex; align-items: center; gap: 14px; padding: 6px 0; border: 0; background: none; color: var(--ink); font-weight: 500; }
 .arrow-circle { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); transition: background 0.2s, border-color 0.2s, color 0.2s; }
