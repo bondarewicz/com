@@ -1,4 +1,10 @@
+# Signals (Cloudflare Content Signals Policy, contentsignals.org):
+# search   - build a search index and show results
+# ai-input - use content as live input for AI answers
+# ai-train - train or fine-tune AI models
+
 User-agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=no
 Allow: /
 
 Sitemap: https://bondarewicz.com/sitemap.xml
