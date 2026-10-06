@@ -126,6 +126,9 @@ function Footer() {
         <p>Still curious?</p>
         <button type="button" className="pill" onClick={contact}>Contact me</button>
       </div>
+      <div className="wrap">
+        <p className="rights">All rights reserved © Łukasz Bondarewicz 2026</p>
+      </div>
     </footer>
   )
 }
