@@ -135,7 +135,6 @@ function Answer({ reply }) {
   const fit = reply.fit || { strong: [], discuss: [] }
   return (
     <div className="ex-a">
-      <p className="speaker">My assistant</p>
       {reply.answer && <p className="answer">{reply.answer}</p>}
       {(fit.strong?.length > 0 || fit.discuss?.length > 0) && (
         <div className="fit">
@@ -340,9 +339,9 @@ export function ConversationView({ starters }) {
 
   if (!open) return null
   return (
-    <div className="convo" role="dialog" aria-modal="true" aria-label="Conversation with my assistant">
+    <div className="convo" role="dialog" aria-modal="true" aria-label="Conversation">
       <header className="convo-bar">
-        <span className="convo-title"><span className="presence on" />My assistant</span>
+        <span className="convo-title"><span className="presence on" />Ask me anything</span>
         <div className="convo-actions">
           {messages.length > 0 && <button type="button" className="inline muted" onClick={reset} disabled={busy}>New conversation</button>}
           <button type="button" className="icon-btn" aria-label="Close the conversation" onClick={() => setOpen(false)}><Close /></button>
