@@ -49,17 +49,24 @@ function asText(reply) {
   return parts.filter(Boolean).join('\n')
 }
 
-export function focusConversation() {
-  document.getElementById('ask')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
 export function AgentProvider({ children }) {
-  const [messages, setMessages] = useState(load)
+  // start empty so the pre-rendered HTML and the first browser render match,
+  // then restore this tab's conversation
+  const [messages, setMessages] = useState([])
+  const restored = useRef(false)
   const [busy, setBusy] = useState(false)
   const [remaining, setRemaining] = useState(null)
   const [contactOpen, setContactOpen] = useState(false)
+  // the full-screen conversation view
+  const [open, setOpen] = useState(false)
 
   useEffect(() => {
+    setMessages(load())
+    restored.current = true
+  }, [])
+
+  useEffect(() => {
+    if (!restored.current) return
     try { sessionStorage.setItem(STORE_KEY, JSON.stringify(messages)) } catch {}
   }, [messages])
 
@@ -75,6 +82,7 @@ export function AgentProvider({ children }) {
   async function ask(text) {
     const question = text.trim()
     if (!question || busy) return
+    setOpen(true)
     const next = [...messages, { role: 'user', content: question }]
     setMessages(next)
     setBusy(true)
@@ -108,7 +116,7 @@ export function AgentProvider({ children }) {
     setContactOpen(false)
   }
 
-  const value = { messages, busy, ask, reset, remaining, cited, contactOpen, setContactOpen }
+  const value = { messages, busy, ask, reset, remaining, cited, contactOpen, setContactOpen, open, setOpen }
   return <AgentContext.Provider value={value}>{children}</AgentContext.Provider>
 }
 
@@ -216,7 +224,7 @@ function ContactForm({ messages, onDone, initial }) {
  * the agent's answer in the serif, its sources on one quiet line beneath.
  */
 export function Thread() {
-  const { messages, busy, ask, reset, contactOpen, setContactOpen } = useAgent()
+  const { messages, busy, ask, contactOpen, setContactOpen } = useAgent()
   const endRef = useRef(null)
   const count = useRef(messages.length)
 
@@ -233,7 +241,6 @@ export function Thread() {
   const last = exchanges[exchanges.length - 1]
   const followups = !busy && last?.a?.followups?.length ? last.a.followups : []
 
-  if (!exchanges.length && !contactOpen) return null
   return (
     <div className="thread" aria-live="polite">
       {exchanges.map((ex, i) => (
@@ -252,14 +259,136 @@ export function Thread() {
         </p>
       )}
       {contactOpen && <ContactForm key={contactOpen} initial={contactOpen} messages={messages} onDone={() => setContactOpen(false)} />}
-      <div className="thread-foot" ref={endRef}>
-        {exchanges.length > 0 && <button type="button" className="inline muted" onClick={reset} disabled={busy}>Start a new conversation</button>}
-      </div>
+      <div ref={endRef} />
     </div>
   )
 }
 
-export function AskAbout({ question, label = 'Ask for a walkthrough', className = 'ask-link' }) {
+function ArrowRight() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  )
+}
+
+// an action with a round arrow beside it: the button reads as "go there"
+export function AskAbout({ question, label = 'Ask for a walkthrough' }) {
   const { ask, busy } = useAgent()
-  return <button type="button" className={className} onClick={() => { focusConversation(); ask(question) }} disabled={busy}>{label}</button>
+  return (
+    <button type="button" className="arrow-action" onClick={() => ask(question)} disabled={busy}>
+      {label}<span className="arrow-circle"><ArrowRight /></span>
+    </button>
+  )
+}
+
+function ArrowUp() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 19V5M6 11l6-6 6 6" />
+    </svg>
+  )
+}
+
+/**
+ * The question box: used in the hero panel and pinned to the bottom of the conversation view.
+ */
+export function Composer({ placeholder, autoFocus, onActiveChange }) {
+  const { ask, busy } = useAgent()
+  const [draft, setDraft] = useState('')
+  const [focused, setFocused] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => { if (autoFocus && window.matchMedia('(min-width: 721px)').matches) ref.current?.focus() }, [autoFocus])
+  // lets the hero stop its typing animation while the visitor is using the box
+  useEffect(() => { onActiveChange?.(focused || draft.length > 0) }, [focused, draft, onActiveChange])
+
+  function submit(e) {
+    e?.preventDefault()
+    if (!draft.trim()) return ref.current?.focus()
+    ask(draft)
+    setDraft('')
+  }
+
+  return (
+    <form className="askbox" onSubmit={submit}>
+      <label htmlFor={autoFocus ? 'followup' : 'question'} className="sr-only">Ask me anything about my work</label>
+      <textarea
+        id={autoFocus ? 'followup' : 'question'}
+        ref={ref}
+        rows={1}
+        value={draft}
+        maxLength={6000}
+        onChange={(e) => setDraft(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) submit(e) }}
+        placeholder={placeholder}
+      />
+      <button type="submit" className="send" aria-label="Ask" disabled={busy}><ArrowUp /></button>
+    </form>
+  )
+}
+
+function Close() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  )
+}
+
+/**
+ * Once someone asks, the conversation takes the whole screen: a slim bar on top,
+ * the thread in a reading column, the question box pinned to the bottom.
+ */
+export function ConversationView({ starters }) {
+  const { open, setOpen, messages, reset, busy, ask } = useAgent()
+
+  useEffect(() => {
+    if (!open) return
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => { document.body.style.overflow = previous; window.removeEventListener('keydown', onKey) }
+  }, [open, setOpen])
+
+  if (!open) return null
+  return (
+    <div className="convo" role="dialog" aria-modal="true" aria-label="Conversation with my assistant">
+      <header className="convo-bar">
+        <span className="convo-title"><span className="presence on" />My assistant</span>
+        <div className="convo-actions">
+          {messages.length > 0 && <button type="button" className="inline muted" onClick={reset} disabled={busy}>New conversation</button>}
+          <button type="button" className="icon-btn" aria-label="Close the conversation" onClick={() => setOpen(false)}><Close /></button>
+        </div>
+      </header>
+      <div className="convo-scroll">
+        <div className="convo-column">
+          {messages.length === 0 && (
+            <div className="convo-empty">
+              <h2>Ask me anything about my work.</h2>
+              <p className="starters">
+                Try{' '}
+                {starters.map((s, i) => (
+                  <span key={s.label}>
+                    {i === starters.length - 1 ? ' or ' : i > 0 ? ', ' : ''}
+                    <button type="button" className="inline" onClick={() => ask(s.question)} disabled={busy}>{s.label}</button>
+                  </span>
+                ))}.
+              </p>
+            </div>
+          )}
+          <Thread />
+        </div>
+      </div>
+      <div className="convo-compose">
+        <div className="convo-column">
+          <Composer placeholder={messages.length ? 'Ask a follow-up' : 'Ask about my work'} autoFocus />
+          <p className="saved-note">Conversations are saved.</p>
+        </div>
+      </div>
+    </div>
+  )
 }

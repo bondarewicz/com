@@ -12,8 +12,9 @@
     "predev": "node scripts/write-version.mjs",
     "dev": "vite",
     "prebuild": "node scripts/write-version.mjs",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "vite build && vite build --ssr src/entry-server.jsx --outDir dist-server && node scripts/prerender.mjs",
+    "preview": "vite preview",
+    "sync-profile": "node scripts/sync-profile.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
