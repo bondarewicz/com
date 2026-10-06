@@ -111,7 +111,6 @@ function Work() {
           <article key={c.id} className="capability">
             <h3>{c.title}</h3>
             <p>{c.text}</p>
-            <AskAbout label="Ask about this" question={`${c.title}: what has Łukasz done here, specifically?`} />
           </article>
         ))}
       </div>
