@@ -1,11 +1,11 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { ROUTES, useLang, useT } from './i18n.js'
 
 export const API_BASE = import.meta.env.VITE_API_BASE || 'https://api.bondarewicz.com/v1'
 const MAX_HISTORY = 20
 const JD_THRESHOLD = 400
 const STORE_KEY = 'lb-agent-conversation'
 const ID_KEY = 'lb-agent-conversation-id'
-const CONTACT_PROMPT = 'Happy to pass a message to Łukasz. What\'s your name, the best email to reach you, and what would you like to talk about?'
 
 const AgentContext = createContext(null)
 export const useAgent = () => useContext(AgentContext)
@@ -44,7 +44,9 @@ function asText(reply) {
   return parts.filter(Boolean).join('\n')
 }
 
-export function AgentProvider({ children }) {
+export function AgentProvider({ children, autoOpen = true }) {
+  const lang = useLang()
+  const t = useT()
   // start empty so the pre-rendered HTML and the first browser render match,
   // then restore this tab's conversation
   const [messages, setMessages] = useState([])
@@ -59,7 +61,7 @@ export function AgentProvider({ children }) {
     const saved = load()
     setMessages(saved)
     // a visitor with a conversation goes straight back to it, until they start a new one
-    if (saved.length) setOpen(true)
+    if (saved.length && autoOpen) setOpen(true)
     restored.current = true
   }, [])
 
@@ -89,17 +91,17 @@ export function AgentProvider({ children }) {
       const r = await fetch(`${API_BASE}/agent/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conversationId: conversationId(), meta: visitMeta(), messages: history.map((m) => ({ role: m.role, content: m.content })) }),
+        body: JSON.stringify({ conversationId: conversationId(), lang, meta: visitMeta(), messages: history.map((m) => ({ role: m.role, content: m.content })) }),
       })
       const data = await r.json().catch(() => ({}))
       if (typeof data.remaining === 'number') setRemaining(data.remaining)
       // failures stay on screen but out of the history sent back to the model
-      if (!r.ok) return fail(question, data.answer || data.error || 'That didn\'t go through. Try again in a moment.', data.offer_contact)
+      if (!r.ok) return fail(question, data.answer || data.error || t.agent.failed, data.offer_contact)
       setMessages((m) => [...m, { role: 'assistant', content: asText(data), reply: data }])
       if (data.contact_saved) setContactOpen(false)
       else if (data.offer_contact) setContactOpen((c) => c || 'offer')
     } catch {
-      fail(question, 'The assistant is offline right now. Leave your details below and Łukasz will get back to you.')
+      fail(question, t.agent.offline)
     } finally {
       setBusy(false)
     }
@@ -110,7 +112,7 @@ export function AgentProvider({ children }) {
   // turns an email address in it into a lead.
   function contact() {
     setOpen(true)
-    setMessages((m) => (m[m.length - 1]?.contactPrompt ? m : [...m, { role: 'assistant', local: true, contactPrompt: true, reply: { answer: CONTACT_PROMPT } }]))
+    setMessages((m) => (m[m.length - 1]?.contactPrompt ? m : [...m, { role: 'assistant', local: true, contactPrompt: true, reply: { answer: t.agent.contactPrompt } }]))
   }
 
   function reset() {
@@ -124,34 +126,37 @@ export function AgentProvider({ children }) {
 }
 
 function Question({ text }) {
+  const t = useT()
   const [expanded, setExpanded] = useState(false)
   if (text.length <= JD_THRESHOLD) return <p className="ex-q">{text}</p>
   return (
     <p className="ex-q">
-      Job description, {text.length.toLocaleString()} characters.{' '}
-      {expanded ? <span className="ex-jd">{text}</span> : <button type="button" className="inline" onClick={() => setExpanded(true)}>Show it</button>}
+      {t.agent.jobDescription(text.length.toLocaleString())}{' '}
+      {expanded ? <span className="ex-jd">{text}</span> : <button type="button" className="inline" onClick={() => setExpanded(true)}>{t.agent.showIt}</button>}
     </p>
   )
 }
 
 function Answer({ reply }) {
+  const t = useT()
   const fit = reply.fit || { strong: [], discuss: [] }
   return (
     <div className="ex-a">
       {reply.answer && <p className="answer">{reply.answer}</p>}
       {(fit.strong?.length > 0 || fit.discuss?.length > 0) && (
         <div className="fit">
-          {fit.strong.length > 0 && <div><h4>Where he matches</h4><ul>{fit.strong.map((s) => <li key={s}>{s}</li>)}</ul></div>}
-          {fit.discuss.length > 0 && <div><h4>Worth discussing</h4><ul>{fit.discuss.map((s) => <li key={s}>{s}</li>)}</ul></div>}
+          {fit.strong.length > 0 && <div><h4>{t.agent.matches}</h4><ul>{fit.strong.map((s) => <li key={s}>{s}</li>)}</ul></div>}
+          {fit.discuss.length > 0 && <div><h4>{t.agent.discuss}</h4><ul>{fit.discuss.map((s) => <li key={s}>{s}</li>)}</ul></div>}
         </div>
       )}
       {reply.ask && <p className="ask-who">{reply.ask}</p>}
-      {reply.contact_saved && <p className="saved" role="status">Your details are with Łukasz. He'll reply by email.</p>}
+      {reply.contact_saved && <p className="saved" role="status">{t.agent.saved}</p>}
     </div>
   )
 }
 
 function ContactForm({ messages, onDone, initial }) {
+  const t = useT()
   const [expanded, setExpanded] = useState(initial === 'form')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -168,36 +173,36 @@ function ContactForm({ messages, onDone, initial }) {
         body: JSON.stringify({ conversationId: conversationId(), name, email, note, transcript: messages.filter((m) => !m.local).map((m) => ({ role: m.role, content: m.content })) }),
       })
       const data = await r.json().catch(() => ({}))
-      if (!r.ok) return setState({ status: 'error', message: data.error || 'That didn\'t send. Check the email address and try again.' })
+      if (!r.ok) return setState({ status: 'error', message: data.error || t.agent.sendFailedEmail })
       setState({ status: 'sent' })
     } catch {
-      setState({ status: 'error', message: 'That didn\'t send. Try again in a minute.' })
+      setState({ status: 'error', message: t.agent.sendFailed })
     }
   }
 
   if (state.status === 'sent') {
-    return <div className="contact sent" role="status">Sent. I'll reply to {email}. <button type="button" className="inline" onClick={onDone}>Close</button></div>
+    return <div className="contact sent" role="status">{t.agent.sent(email)} <button type="button" className="inline" onClick={onDone}>{t.agent.close}</button></div>
   }
   if (!expanded) {
     return (
       <div className="contact offer">
-        <span>Want me to get back to you?</span>
-        <button type="button" className="btn-quiet" onClick={() => setExpanded(true)}>Leave your details</button>
+        <span>{t.agent.wantReply}</span>
+        <button type="button" className="btn-quiet" onClick={() => setExpanded(true)}>{t.agent.leaveDetails}</button>
       </div>
     )
   }
   return (
     <form className="contact" onSubmit={send}>
-      <p className="contact-lead">Leave your details and I'll reply by email. This conversation is included.</p>
+      <p className="contact-lead">{t.agent.formLead}</p>
       <div className="contact-row">
-        <label>Name<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" maxLength={120} /></label>
-        <label>Email<input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" maxLength={254} /></label>
+        <label>{t.agent.name}<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" maxLength={120} /></label>
+        <label>{t.agent.email}<input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" maxLength={254} /></label>
       </div>
-      <label>What it's about <span className="opt">(optional)</span><textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} /></label>
+      <label>{t.agent.about} <span className="opt">{t.agent.optional}</span><textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} /></label>
       {state.status === 'error' && <p className="error" role="alert">{state.message}</p>}
       <div className="contact-actions">
-        <button type="submit" className="btn-quiet" disabled={state.status === 'sending'}>{state.status === 'sending' ? 'Sending' : 'Send details'}</button>
-        <button type="button" className="inline" onClick={onDone}>Cancel</button>
+        <button type="submit" className="btn-quiet" disabled={state.status === 'sending'}>{state.status === 'sending' ? t.agent.sending : t.agent.send}</button>
+        <button type="button" className="inline" onClick={onDone}>{t.agent.cancel}</button>
       </div>
     </form>
   )
@@ -208,6 +213,7 @@ function ContactForm({ messages, onDone, initial }) {
  * the agent's answer in the serif.
  */
 export function Thread() {
+  const t = useT()
   const { messages, busy, ask, contactOpen, setContactOpen } = useAgent()
   const endRef = useRef(null)
   const count = useRef(messages.length)
@@ -232,14 +238,14 @@ export function Thread() {
       {exchanges.map((ex, i) => (
         <article className="exchange" key={i}>
           {ex.q && <Question text={ex.q} />}
-          {ex.a ? <Answer reply={ex.a} /> : <p className="thinking" aria-label="Thinking"><span /><span /><span /></p>}
+          {ex.a ? <Answer reply={ex.a} /> : <p className="thinking" aria-label={t.agent.thinking}><span /><span /><span /></p>}
         </article>
       ))}
       {followups.length > 0 && (
         <p className="next">
-          Ask next:{' '}
+          {t.agent.askNext}{' '}
           {followups.map((q, i) => (
-            <span key={q}>{i > 0 && ', or '}<button type="button" className="inline" onClick={() => ask(q)}>{q.replace(/\?$/, '')}</button></span>
+            <span key={q}>{i > 0 && t.agent.orNext}<button type="button" className="inline" onClick={() => ask(q)}>{q.replace(/\?$/, '')}</button></span>
           ))}
           ?
         </p>
@@ -259,11 +265,12 @@ function ArrowRight() {
 }
 
 // an action with a round arrow beside it: the button reads as "go there"
-export function AskAbout({ question, label = 'Ask for a walkthrough' }) {
+export function AskAbout({ question, label }) {
   const { ask, busy } = useAgent()
+  const t = useT()
   return (
     <button type="button" className="arrow-action" onClick={() => ask(question)} disabled={busy}>
-      {label}<span className="arrow-circle"><ArrowRight /></span>
+      {label || t.agent.walkthrough}<span className="arrow-circle"><ArrowRight /></span>
     </button>
   )
 }
@@ -281,6 +288,7 @@ function ArrowUp() {
  */
 export function Composer({ placeholder, autoFocus, onActiveChange }) {
   const { ask, busy } = useAgent()
+  const t = useT()
   const [draft, setDraft] = useState('')
   const [focused, setFocused] = useState(false)
   const ref = useRef(null)
@@ -298,7 +306,7 @@ export function Composer({ placeholder, autoFocus, onActiveChange }) {
 
   return (
     <form className="askbox" onSubmit={submit}>
-      <label htmlFor={autoFocus ? 'followup' : 'question'} className="sr-only">Ask me anything about my work</label>
+      <label htmlFor={autoFocus ? 'followup' : 'question'} className="sr-only">{t.agent.askQuestion}</label>
       <textarea
         id={autoFocus ? 'followup' : 'question'}
         ref={ref}
@@ -311,7 +319,7 @@ export function Composer({ placeholder, autoFocus, onActiveChange }) {
         onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) submit(e) }}
         placeholder={placeholder}
       />
-      <button type="submit" className="send" aria-label="Ask" disabled={busy}><ArrowUp /></button>
+      <button type="submit" className="send" aria-label={t.agent.askButton} disabled={busy}><ArrowUp /></button>
     </form>
   )
 }
@@ -328,8 +336,11 @@ function Close() {
  * Once someone asks, the conversation takes the whole screen: a slim bar on top,
  * the thread in a reading column, the question box pinned to the bottom.
  */
-export function ConversationView({ starters }) {
+export function ConversationView() {
   const { open, setOpen, messages, reset, busy, ask } = useAgent()
+  const lang = useLang()
+  const t = useT()
+  const starters = t.starters
 
   useEffect(() => {
     if (!open) return
@@ -342,24 +353,24 @@ export function ConversationView({ starters }) {
 
   if (!open) return null
   return (
-    <div className="convo" role="dialog" aria-modal="true" aria-label="Conversation">
+    <div className="convo" role="dialog" aria-modal="true" aria-label={t.agent.conversation}>
       <header className="convo-bar">
-        <span className="convo-title"><span className="presence on" />Ask me anything</span>
+        <span className="convo-title"><span className="presence on" />{t.hero.ask}</span>
         <div className="convo-actions">
-          {messages.length > 0 && <button type="button" className="inline muted" onClick={reset} disabled={busy}>New conversation</button>}
-          <button type="button" className="icon-btn" aria-label="Close the conversation" onClick={() => setOpen(false)}><Close /></button>
+          {messages.length > 0 && <button type="button" className="inline muted" onClick={reset} disabled={busy}>{t.agent.newConversation}</button>}
+          <button type="button" className="icon-btn" aria-label={t.agent.closeConversation} onClick={() => setOpen(false)}><Close /></button>
         </div>
       </header>
       <div className="convo-scroll">
         <div className="convo-column">
           {messages.length === 0 && (
             <div className="convo-empty">
-              <h2>Ask me anything about my work.</h2>
+              <h2>{t.agent.emptyHeading}</h2>
               <p className="starters">
-                Try{' '}
+                {t.hero.try}{' '}
                 {starters.map((s, i) => (
                   <span key={s.label}>
-                    {i === starters.length - 1 ? ' or ' : i > 0 ? ', ' : ''}
+                    {i === starters.length - 1 ? t.hero.or : i > 0 ? ', ' : ''}
                     <button type="button" className="inline" onClick={() => ask(s.question)} disabled={busy}>{s.label}</button>
                   </span>
                 ))}.
@@ -371,8 +382,8 @@ export function ConversationView({ starters }) {
       </div>
       <div className="convo-compose">
         <div className="convo-column">
-          <Composer placeholder={messages[messages.length - 1]?.contactPrompt ? 'Your name, email and what it\'s about' : messages.length ? 'Ask a follow-up' : 'Ask about my work'} autoFocus />
-          <p className="saved-note">You're chatting with an AI assistant that can make mistakes. <a href="/privacy/">Conversations are saved.</a></p>
+          <Composer placeholder={messages[messages.length - 1]?.contactPrompt ? t.agent.contactPlaceholder : messages.length ? t.hero.followUp : t.hero.askAboutWork} autoFocus />
+          <p className="saved-note">{t.agent.notice} <a href={ROUTES.privacy[lang]}>{t.agent.savedNotice}</a></p>
         </div>
       </div>
     </div>

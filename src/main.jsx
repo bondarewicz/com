@@ -1,12 +1,14 @@
 import React from 'react'
 import { createRoot, hydrateRoot } from 'react-dom/client'
 import App from './App.jsx'
+import { routeFor } from './i18n.js'
 import './site.css'
 
 const root = document.getElementById('root')
+const { page, lang } = routeFor(location.pathname)
 const app = (
   <React.StrictMode>
-    <App />
+    <App page={page} lang={lang} />
   </React.StrictMode>
 )
 

@@ -29,7 +29,7 @@ It copies only what the page shows, the capabilities and the GitHub and LinkedIn
 npm run build        # dist/, pre-rendered
 ```
 
-The build renders the page to static HTML (`src/entry-server.jsx`, `scripts/prerender.mjs`) so search engines and link previews see the full content; React then takes over in the browser (`src/main.jsx`).
+The build renders every page in both languages to static HTML (`src/entry-server.jsx`, `scripts/prerender.mjs`): `/`, `/pl/`, `/privacy/`, `/pl/prywatnosc/`, `/terms/` and `/pl/regulamin/`, each with its own language, title, description and links to its other-language version, so search engines and link previews see the full content. React then takes over in the browser (`src/main.jsx`).
 
 Every push to `master` builds and publishes to GitHub Pages with `.github/workflows/deploy.yml`; `public/CNAME` serves it at bondarewicz.com. Pushes in quick succession cancel the earlier deploy, so the last one wins.
 
@@ -37,15 +37,18 @@ Every push to `master` builds and publishes to GitHub Pages with `.github/workfl
 
 | File | What it does |
 |---|---|
-| `src/App.jsx` | The page: header with the wordmark, hero (greeting, headline, what I do, Ask me anything), About me, What I do, footer |
+| `src/App.jsx` | The pages: header with the wordmark and EN \| PL switch, hero (greeting, headline, Ask me anything), About me, What I do, the privacy and terms pages, footer |
+| `src/i18n.js` | All interface text in English and Polish, and the page addresses in each language |
+| `src/legal.js` | The privacy page and terms in both languages: only what GDPR Article 13 and the Polish electronic services act require |
 | `src/Agent.jsx` | Conversation state, the question box, and the full-screen conversation view: answers, fit reports for job descriptions, follow-ups, the contact form when it's needed |
 | `src/site.css` | All styles. Night navy for the hero and conversation, paper for reading, teal for interaction, amber for the one primary action |
-| `src/profile.json` | Capabilities and links, copied from the agent's profile (see "Profile") |
-| `index.html` | Title, description, canonical URL, social preview tags, structured data (schema.org Person), fonts (Instrument Serif, Geist) |
+| `src/profile.json` | Capabilities and links, copied from the agent's profile (see "Profile"); the Polish capabilities are in `src/i18n.js` |
+| `index.html` | The page template: social preview tags, structured data (schema.org Person), and the browser-language default. Fonts (Instrument Serif, Geist) are served from `public/fonts/`, not Google |
 | `public/` | `og.png` social preview, favicons, `robots.txt`, `sitemap.xml`, `CNAME` |
 
 ## Behaviour worth knowing
 
+- English at `/`, Polish at `/pl/`. A first visit to `/` with Polish as the browser's preferred language goes to `/pl/`, unless the visitor picked a language with the switch (remembered in localStorage). The assistant answers in the visitor's language.
 - Asking anything opens a full-screen conversation with the question box pinned to the bottom; closing it (✕ or Esc) returns to the page, which offers to continue.
 - A conversation lives in the visitor's tab (sessionStorage) and survives a refresh; the API also records it, so Łukasz can follow up.
 - The page is in Łukasz's voice; the assistant's answers talk about him in the third person.

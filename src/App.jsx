@@ -1,46 +1,39 @@
 import { useEffect, useState } from 'react'
 import profile from './profile.json'
 import { AgentProvider, AskAbout, Composer, ConversationView, useAgent, API_BASE } from './Agent.jsx'
+import { LangContext, ROUTES, useLang, useT } from './i18n.js'
+import { LEGAL } from './legal.js'
 
 const { contact } = profile
 // hidden until a real profile URL is set in profile.json
 const linkedin = contact.linkedin && !contact.linkedin.includes('[') ? contact.linkedin : null
 
-// what a visitor might ask; short enough to fit the box on one line
-const EXAMPLES = [
-  'What did you build?',
-  'Are you a fit for us?',
-  'What are you building?',
-  'What role do you want?',
-]
-const STARTERS = [
-  { label: 'what I built as engineer #1', question: 'What has Łukasz built in the past?' },
-  { label: 'what I\'m building now', question: 'What is Łukasz building now?' },
-  { label: 'what I\'m looking for next', question: 'What is Łukasz looking for next?' },
-]
-
+// remembers an explicit choice, so the browser-language default doesn't override it
+function rememberLang(lang) {
+  try { localStorage.setItem('lang', lang) } catch {}
+}
 
 /**
  * The question box types example questions until the visitor clicks in.
  * It's the one piece of motion on the page.
  */
-function useTypedPlaceholder(paused) {
-  const [text, setText] = useState(EXAMPLES[0])
+function useTypedPlaceholder(examples, paused) {
+  const [text, setText] = useState(examples[0])
   useEffect(() => {
     if (paused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    let i = 0, n = EXAMPLES[0].length, deleting = true, timer
+    let i = 0, n = examples[0].length, deleting = true, timer
     const tick = () => {
-      const phrase = EXAMPLES[i]
+      const phrase = examples[i]
       n += deleting ? -2 : 1
       setText(phrase.slice(0, Math.max(n, 0)))
       let delay = deleting ? 16 : 45
       if (!deleting && n >= phrase.length) { deleting = true; delay = 2200 }
-      else if (deleting && n <= 0) { deleting = false; n = 0; i = (i + 1) % EXAMPLES.length; delay = 260 }
+      else if (deleting && n <= 0) { deleting = false; n = 0; i = (i + 1) % examples.length; delay = 260 }
       timer = setTimeout(tick, delay)
     }
     timer = setTimeout(tick, 2600)
     return () => clearTimeout(timer)
-  }, [paused])
+  }, [examples, paused])
   return text
 }
 
@@ -54,26 +47,27 @@ function useAgentOnline() {
 
 function Hero() {
   const { ask, busy, messages, setOpen } = useAgent()
+  const t = useT()
   const [paused, setPaused] = useState(false)
-  const typed = useTypedPlaceholder(paused)
+  const typed = useTypedPlaceholder(t.hero.examples, paused)
   const online = useAgentOnline()
 
   return (
     <section className="hero">
       <div className="hero-stack">
-        <p className="greeting">Hi, I'm Łukasz.</p>
-        <h1>I've spent nearly two decades helping teams ship better software, and now I bring in AI where it actually helps.</h1>
+        <p className="greeting">{t.hero.greeting}</p>
+        <h1>{t.hero.headline}</h1>
 
-        <aside className="assistant" id="ask" aria-label="Ask me anything">
-          <h2><span className={`presence ${online ? 'on' : ''}`} title={online ? 'Online' : 'Offline'} />Ask me anything</h2>
+        <aside className="assistant" id="ask" aria-label={t.hero.ask}>
+          <h2><span className={`presence ${online ? 'on' : ''}`} title={online ? t.hero.online : t.hero.offline} />{t.hero.ask}</h2>
           {messages.length === 0 ? (
             <>
-              <Composer placeholder={paused ? 'Ask about my work' : typed} onActiveChange={setPaused} />
+              <Composer placeholder={paused ? t.hero.askAboutWork : typed} onActiveChange={setPaused} />
               <p className="starters">
-                Try{' '}
-                {STARTERS.map((s, i) => (
+                {t.hero.try}{' '}
+                {t.starters.map((s, i) => (
                   <span key={s.label}>
-                    {i === STARTERS.length - 1 ? ' or ' : i > 0 ? ', ' : ''}
+                    {i === t.starters.length - 1 ? t.hero.or : i > 0 ? ', ' : ''}
                     <button type="button" className="inline" onClick={() => ask(s.question)} disabled={busy}>{s.label}</button>
                   </span>
                 ))}.
@@ -82,7 +76,7 @@ function Hero() {
           ) : (
             // with a conversation going, the box is the way back into it
             <div onFocusCapture={() => setOpen(true)} onClickCapture={() => setOpen(true)}>
-              <Composer placeholder="Ask a follow-up" />
+              <Composer placeholder={t.hero.followUp} />
             </div>
           )}
         </aside>
@@ -92,83 +86,122 @@ function Hero() {
 }
 
 function About() {
+  const t = useT()
   return (
     <section className="section about" id="about">
-      <h2>I help teams turn a first idea into software they can rely on.</h2>
+      <h2>{t.about.heading}</h2>
       <div className="about-body">
-        <p>Twice, I've been the first engineer a company hired. Both times it meant listening closely to what the business needed, building the pipelines and infrastructure a growing team could rely on, and helping new engineers find their feet as the team grew.</p>
-        <p>Most recently, I helped set the technical direction of a logistics platform I'd built from its foundations, and brought AI into one of its core parts.</p>
-        <p>If your team is starting something new, or wants to ship with more confidence, I'd love to hear about it.</p>
-        <AskAbout label="Ask about my background" question="Tell me about Łukasz's background and how he works." />
+        {t.about.paragraphs.map((p) => <p key={p}>{p}</p>)}
+        <AskAbout label={t.about.ask} question={t.about.question} />
       </div>
     </section>
   )
 }
 
 function Work() {
+  const t = useT()
   return (
     <section className="section" id="work">
-      <h2>What teams bring me in for.</h2>
+      <h2>{t.work.heading}</h2>
       <div className="capabilities">
-        {profile.capabilities.map((c) => (
-          <article key={c.id} className="capability">
-            <h3>{c.title}</h3>
-            <p>{c.text}</p>
-          </article>
-        ))}
+        {profile.capabilities.map((c) => {
+          const text = t.capabilities?.[c.id] || c
+          return (
+            <article key={c.id} className="capability">
+              <h3>{text.title}</h3>
+              <p>{text.text}</p>
+            </article>
+          )
+        })}
       </div>
     </section>
   )
 }
 
+function Legal({ page }) {
+  const lang = useLang()
+  const { title, html } = LEGAL[page][lang]
+  return (
+    <section className="section legal">
+      <h2>{title}</h2>
+      <div className="legal-body" dangerouslySetInnerHTML={{ __html: html }} />
+    </section>
+  )
+}
+
 function Footer() {
-  const { contact } = useAgent()
+  const { contact: openContact } = useAgent()
+  const lang = useLang()
+  const t = useT()
   // pre-rendered with the build year, then the visitor's current year, so it never goes stale
   const [year, setYear] = useState(__BUILD_YEAR__)
   useEffect(() => setYear(new Date().getFullYear()), [])
   return (
     <footer className="foot">
       <div className="wrap foot-in">
-        <p>Still curious?</p>
-        <button type="button" className="pill" onClick={contact}>Contact me</button>
+        <p>{t.footer.curious}</p>
+        <button type="button" className="pill" onClick={openContact}>{t.footer.contact}</button>
       </div>
       <div className="wrap">
-        <p className="rights">All rights reserved © Łukasz Bondarewicz {year} · <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a></p>
+        <p className="rights">{t.footer.rights} © Łukasz Bondarewicz {year} · <a href={ROUTES.privacy[lang]}>{t.footer.privacy}</a> · <a href={ROUTES.terms[lang]}>{t.footer.terms}</a></p>
       </div>
     </footer>
   )
 }
 
-function Page() {
+function LangSwitch({ page }) {
+  const lang = useLang()
+  const t = useT()
+  return (
+    <span className="lang" role="group" aria-label={t.nav.language}>
+      {['en', 'pl'].map((l, i) => (
+        <span key={l}>
+          {i > 0 && <span className="lang-sep" aria-hidden="true">|</span>}
+          {l === lang
+            ? <a aria-current="page" lang={l}>{l.toUpperCase()}</a>
+            : <a href={ROUTES[page][l]} hrefLang={l} lang={l} onClick={() => rememberLang(l)}>{l.toUpperCase()}</a>}
+        </span>
+      ))}
+    </span>
+  )
+}
+
+function Page({ page }) {
+  const lang = useLang()
+  const t = useT()
+  const home = ROUTES.home[lang]
   return (
     <>
       <div className="night">
         <div className="wrap">
           <header className="top">
-            <a href="/" className="logo" aria-label="bondarewicz.com, home">bondarewicz<span>.com</span></a>
-            <nav aria-label="Sections">
-              <a href="#work">What I do</a>
+            <a href={home} className="logo" aria-label={t.nav.home}>bondarewicz<span>.com</span></a>
+            <nav aria-label={t.nav.sections}>
+              <a href={page === 'home' ? '#work' : `${home}#work`}>{t.nav.work}</a>
               <a href={contact.github} target="_blank" rel="noreferrer">GitHub</a>
               {linkedin && <a href={linkedin} target="_blank" rel="noreferrer">LinkedIn</a>}
+              <LangSwitch page={page} />
             </nav>
           </header>
-          <Hero />
+          {page === 'home' && <Hero />}
         </div>
       </div>
       <main className="wrap">
-        <About />
-        <Work />
+        {page === 'home' ? <><About /><Work /></> : <Legal page={page} />}
       </main>
       <Footer />
-      <ConversationView starters={STARTERS} />
+      <ConversationView />
     </>
   )
 }
 
-export default function App() {
+export default function App({ page = 'home', lang = 'en' }) {
   return (
-    <AgentProvider>
-      <Page />
-    </AgentProvider>
+    <LangContext.Provider value={lang}>
+      {/* only the home page takes a returning visitor straight back to their conversation */}
+      <AgentProvider autoOpen={page === 'home'}>
+        <Page page={page} />
+      </AgentProvider>
+    </LangContext.Provider>
   )
 }

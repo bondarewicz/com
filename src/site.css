@@ -49,9 +49,12 @@ button:disabled { cursor: default; opacity: 0.5; }
 /* the wordmark: Geist at its lightest, so it contrasts with the serif headlines */
 .logo { display: inline-block; padding: 10px 0; font: 200 28px/1 var(--sans); letter-spacing: -0.01em; color: var(--night-text); text-decoration: none; }
 .logo span { color: var(--night-muted); }
-.top nav { display: flex; gap: 22px; font-size: 15px; }
+.top nav { display: flex; align-items: baseline; gap: 22px; font-size: 15px; }
 .top nav a { color: var(--night-muted); text-decoration: none; padding: 10px 0; }
 .top nav a:hover { color: var(--night-text); }
+.lang { display: inline-flex; align-items: baseline; gap: 8px; color: var(--night-muted); }
+.lang-sep { margin-right: 8px; color: var(--night-line); }
+.top nav .lang a[aria-current] { color: var(--night-text); font-weight: 600; }
 
 .hero { padding: 8vh 0 96px; }
 /* one column, one left edge: greeting, headline, what I do, then the question box */
@@ -173,6 +176,16 @@ button:disabled { cursor: default; opacity: 0.5; }
 .about-body { max-width: 62ch; }
 .about-body p { margin: 0 0 18px; font-size: 19px; line-height: 1.65; color: #2A303B; }
 .about-body .arrow-action { margin-top: 8px; }
+
+/* ───── privacy and terms: the About section's reading column ───── */
+.legal-body { max-width: 62ch; font-size: 17px; line-height: 1.65; color: #2A303B; }
+.section .legal-body h2 { margin: 40px 0 8px; max-width: none; font: 600 19px/1.4 var(--sans); letter-spacing: 0; color: var(--ink); }
+.legal-body p, .legal-body ul { margin: 0 0 14px; text-wrap: pretty; }
+.legal-body ul { padding-left: 22px; }
+.legal-body li { margin-bottom: 6px; }
+.legal-body a { color: var(--teal-deep); text-underline-offset: 3px; }
+.legal-body .box { padding: 16px 20px; border: 1px solid var(--line); border-radius: 12px; }
+.legal-body .box p { margin: 0; }
 
 @media (max-width: 860px) {
   .capabilities { grid-template-columns: minmax(0, 1fr); }

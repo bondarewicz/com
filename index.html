@@ -6,11 +6,24 @@
     <title>Łukasz Bondarewicz · Technical Lead</title>
     <meta name="description" content="Łukasz Bondarewicz helps teams ship better software, with AI where it actually helps. Technical Lead with nearly two decades of turning first ideas into reliable software, twice as a company's first engineer." />
     <link rel="canonical" href="https://bondarewicz.com/" />
+    <script>
+      // First visit to the home page with a Polish browser goes to the Polish version, unless the
+      // visitor already picked a language with the switch.
+      (function () {
+        try {
+          if (location.pathname !== '/') return
+          var saved = localStorage.getItem('lang')
+          var preferred = (navigator.languages && navigator.languages[0]) || navigator.language || ''
+          if (saved === 'pl' || (!saved && /^pl\b/i.test(preferred))) location.replace('/pl/' + location.hash)
+        } catch (e) {}
+      })()
+    </script>
     <meta name="theme-color" content="#0E1420" />
     <meta name="author" content="Łukasz Bondarewicz" />
 
     <meta property="og:type" content="profile" />
     <meta property="og:site_name" content="bondarewicz.com" />
+    <meta property="og:locale" content="en_GB" />
     <meta property="og:url" content="https://bondarewicz.com/" />
     <meta property="og:title" content="Łukasz Bondarewicz · Technical Lead" />
     <meta property="og:description" content="I've spent nearly two decades helping teams ship better software, and now I bring in AI where it actually helps. Ask me anything about my work." />
