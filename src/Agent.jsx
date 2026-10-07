@@ -369,7 +369,7 @@ export function ConversationView({ starters }) {
       <div className="convo-compose">
         <div className="convo-column">
           <Composer placeholder={messages[messages.length - 1]?.contactPrompt ? 'Your name, email and what it\'s about' : messages.length ? 'Ask a follow-up' : 'Ask about my work'} autoFocus />
-          <p className="saved-note">Conversations are saved.</p>
+          <p className="saved-note">You're chatting with an AI assistant that can make mistakes. Conversations are saved so I can follow up and improve its answers.</p>
         </div>
       </div>
     </div>
