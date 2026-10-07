@@ -28,6 +28,8 @@ body { margin: 0; background: var(--paper); color: var(--ink); font: 400 17px/1.
 .top { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 56px; font-size: 15px; }
 .logo { font: 400 26px/1 'Instrument Serif', Georgia, serif; color: var(--ink); text-decoration: none; }
 .logo span { color: var(--muted); }
+.lang { display: flex; gap: 8px; color: var(--muted); }
+.lang a[aria-current] { color: var(--ink); font-weight: 600; text-decoration: none; }
 a { color: var(--teal-deep); text-underline-offset: 3px; }
 h1 { margin: 0 0 32px; font: 400 clamp(40px, 7vw, 56px)/1.05 'Instrument Serif', Georgia, serif; letter-spacing: -0.01em; }
 h2 { margin: 40px 0 8px; font-size: 19px; font-weight: 600; }
