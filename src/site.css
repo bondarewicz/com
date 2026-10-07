@@ -86,7 +86,7 @@ button:disabled { cursor: default; opacity: 0.5; }
 .convo .thread { margin-top: 0; max-width: none; }
 .convo-compose { padding: 14px 0 calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--night-line); background: var(--night); }
 .convo-compose .askbox textarea { font-size: clamp(20px, 2vw, 24px); }
-.saved-note { margin: 12px 0 0; font-size: 13px; color: var(--night-muted); }
+.saved-note { margin: 12px 0 0; font-size: 13px; color: var(--night-muted); text-wrap: pretty; }
 
 .starters { margin: 16px 0 0; font-size: 15px; max-width: var(--measure); color: var(--night-muted); font-size: 16px; }
 .starters .inline { color: var(--night-text); text-decoration-color: var(--teal); }
