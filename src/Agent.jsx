@@ -56,7 +56,10 @@ export function AgentProvider({ children }) {
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
-    setMessages(load())
+    const saved = load()
+    setMessages(saved)
+    // a visitor with a conversation goes straight back to it, until they start a new one
+    if (saved.length) setOpen(true)
     restored.current = true
   }, [])
 
@@ -369,7 +372,7 @@ export function ConversationView({ starters }) {
       <div className="convo-compose">
         <div className="convo-column">
           <Composer placeholder={messages[messages.length - 1]?.contactPrompt ? 'Your name, email and what it\'s about' : messages.length ? 'Ask a follow-up' : 'Ask about my work'} autoFocus />
-          <p className="saved-note">You're chatting with an AI assistant that can make mistakes. Conversations are saved so I can follow up and improve its&nbsp;answers.</p>
+          <p className="saved-note">You're chatting with an AI assistant that can make mistakes. Conversations are saved.</p>
         </div>
       </div>
     </div>

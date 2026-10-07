@@ -80,7 +80,10 @@ function Hero() {
               </p>
             </>
           ) : (
-            <button type="button" className="pill" onClick={() => setOpen(true)}>Continue your conversation</button>
+            // with a conversation going, the box is the way back into it
+            <div onFocusCapture={() => setOpen(true)} onClickCapture={() => setOpen(true)}>
+              <Composer placeholder="Ask a follow-up" />
+            </div>
           )}
         </aside>
       </div>
