@@ -133,7 +133,7 @@ function Footer() {
         <button type="button" className="pill" onClick={contact}>Contact me</button>
       </div>
       <div className="wrap">
-        <p className="rights">All rights reserved © Łukasz Bondarewicz {year}</p>
+        <p className="rights">All rights reserved © Łukasz Bondarewicz {year} · <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a></p>
       </div>
     </footer>
   )
