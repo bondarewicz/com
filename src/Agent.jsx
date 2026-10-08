@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
-import { ROUTES, useLang, useT } from './i18n.js'
+import { QUESTIONS, ROUTES, useLang, useT } from './i18n.js'
 
 export const API_BASE = import.meta.env.VITE_API_BASE || 'https://api.bondarewicz.com/v1'
 const MAX_HISTORY = 20
@@ -44,7 +44,7 @@ function asText(reply) {
   return parts.filter(Boolean).join('\n')
 }
 
-export function AgentProvider({ children, autoOpen = true }) {
+export function AgentProvider({ children, autoOpen = true, askSlug = null }) {
   const lang = useLang()
   const t = useT()
   // start empty so the pre-rendered HTML and the first browser render match,
@@ -83,11 +83,14 @@ export function AgentProvider({ children, autoOpen = true }) {
     if (saved.length && autoOpen) setOpen(true)
     restored.current = true
     const params = new URLSearchParams(location.search)
-    const question = (params.get('ask') || '').trim().slice(0, 300)
+    const question = askSlug ? QUESTIONS[askSlug][lang] : (params.get('ask') || '').trim().slice(0, 300)
     if (question) {
-      // asked once: take it out of the address so a refresh doesn't ask again
+      // asked once: back to the plain page address so a refresh doesn't ask again, noting which
+      // question link brought them (unless the link already said where it was shared, ?ref=)
       params.delete('ask')
-      history.replaceState(null, '', location.pathname + (params.toString() ? `?${params}` : '') + location.hash)
+      if (askSlug && !params.get('ref')) params.set('ref', `ask-${askSlug}`)
+      const path = askSlug ? ROUTES.home[lang] : location.pathname
+      history.replaceState(null, '', path + (params.toString() ? `?${params}` : '') + location.hash)
       setLinkQuestion(question)
     }
   }, [])

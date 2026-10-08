@@ -5,10 +5,10 @@ import { routeFor } from './i18n.js'
 import './site.css'
 
 const root = document.getElementById('root')
-const { page, lang } = routeFor(location.pathname)
+const { page, lang, ask } = routeFor(location.pathname)
 const app = (
   <React.StrictMode>
-    <App page={page} lang={lang} />
+    <App page={page} lang={lang} ask={ask} />
   </React.StrictMode>
 )
 

@@ -13,11 +13,22 @@ export const ROUTES = {
   terms: { en: '/terms/', pl: '/pl/regulamin/' },
 }
 
+// Question links: /ask/fit/ (or /pl/ask/fit/) opens the home page with that question asked.
+// A path rather than ?ask=, because LinkedIn drops everything after "?" from links it shows.
+export const QUESTIONS = {
+  fit: { en: 'Is Łukasz a fit for our team?', pl: 'Czy Łukasz pasuje do naszego zespołu?' },
+  built: { en: 'What has Łukasz built?', pl: 'Co Łukasz zbudował?' },
+  building: { en: 'What is Łukasz building now?', pl: 'Nad czym Łukasz teraz pracuje?' },
+}
+export const askPath = (slug, lang) => `${lang === 'pl' ? '/pl' : ''}/ask/${slug}/`
+
 export function routeFor(pathname) {
   const path = pathname.endsWith('/') ? pathname : `${pathname}/`
   for (const [page, paths] of Object.entries(ROUTES)) {
     for (const lang of LANGS) if (paths[lang] === path) return { page, lang }
   }
+  const ask = path.match(/^(\/pl)?\/ask\/([a-z-]+)\/$/)
+  if (ask && QUESTIONS[ask[2]]) return { page: 'home', lang: ask[1] ? 'pl' : 'en', ask: ask[2] }
   return { page: 'home', lang: path.startsWith('/pl/') ? 'pl' : 'en' }
 }
 

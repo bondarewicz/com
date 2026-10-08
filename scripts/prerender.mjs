@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path'
 
 const SITE = 'https://bondarewicz.com'
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
-const { render, ROUTES, STRINGS } = await import(pathToFileURL(join(root, 'dist-server', 'entry-server.js')).href)
+const { render, ROUTES, STRINGS, QUESTIONS, askPath } = await import(pathToFileURL(join(root, 'dist-server', 'entry-server.js')).href)
 const template = readFileSync(join(root, 'dist', 'index.html'), 'utf8')
 if (!template.includes('<!--app-html-->')) throw new Error('index.html is missing the <!--app-html--> placeholder')
 
@@ -18,7 +18,14 @@ function swap(html, pattern, value) {
   return html.replace(pattern, value)
 }
 
-for (const [page, paths] of Object.entries(ROUTES)) {
+// every page in both languages, plus the question links (/ask/fit/ and /pl/ask/fit/): the home
+// page with its own address, so link previews keep the path, and kept out of search results
+const pages = [
+  ...Object.entries(ROUTES).map(([page, paths]) => ({ page, paths })),
+  ...Object.keys(QUESTIONS).map((ask) => ({ page: 'home', ask, paths: { en: askPath(ask, 'en'), pl: askPath(ask, 'pl') } })),
+]
+
+for (const { page, paths, ask } of pages) {
   for (const [lang, path] of Object.entries(paths)) {
     const { title, description } = STRINGS[lang].meta[page]
     const url = SITE + path
@@ -39,6 +46,10 @@ for (const [page, paths] of Object.entries(ROUTES)) {
     } else if (lang === 'pl') {
       html = swap(html, /<meta property="og:description" content="[^"]*" \/>/, `<meta property="og:description" content="${attr(`${STRINGS.pl.hero.headline} ${STRINGS.pl.agent.emptyHeading}`)}" />`)
       html = swap(html, /<meta name="twitter:description" content="[^"]*" \/>/, `<meta name="twitter:description" content="${attr(STRINGS.pl.hero.headline)}" />`)
+    }
+    if (ask) {
+      html = swap(html, /<meta property="og:title" content="[^"]*" \/>/, `<meta property="og:title" content="${attr(QUESTIONS[ask][lang])}" />`)
+      html = html.replace('</head>', '    <meta name="robots" content="noindex" />\n  </head>')
     }
     html = html.replace('<!--app-html-->', render(page, lang))
     const out = join(root, 'dist', path)

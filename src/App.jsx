@@ -186,11 +186,11 @@ function Page({ page }) {
   )
 }
 
-export default function App({ page = 'home', lang = 'en' }) {
+export default function App({ page = 'home', lang = 'en', ask = null }) {
   return (
     <LangContext.Provider value={lang}>
       {/* only the home page takes a returning visitor straight back to their conversation */}
-      <AgentProvider autoOpen={page === 'home'}>
+      <AgentProvider autoOpen={page === 'home'} askSlug={ask}>
         <Page page={page} />
       </AgentProvider>
     </LangContext.Provider>

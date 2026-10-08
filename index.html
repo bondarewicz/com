@@ -11,10 +11,11 @@
       // visitor already picked a language with the switch.
       (function () {
         try {
-          if (location.pathname !== '/') return
+          // the home page, or a question link (/ask/fit/), each has a Polish twin under /pl/
+          if (location.pathname !== '/' && !/^\/ask\/[a-z-]+\/$/.test(location.pathname)) return
           var saved = localStorage.getItem('lang')
           var preferred = (navigator.languages && navigator.languages[0]) || navigator.language || ''
-          if (saved === 'pl' || (!saved && /^pl\b/i.test(preferred))) location.replace('/pl/' + location.search + location.hash)
+          if (saved === 'pl' || (!saved && /^pl\b/i.test(preferred))) location.replace('/pl' + location.pathname + location.search + location.hash)
         } catch (e) {}
       })()
     </script>
