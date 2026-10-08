@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import profile from './profile.json'
-import { AgentProvider, AskAbout, Composer, ConversationView, useAgent, API_BASE } from './Agent.jsx'
+import { AgentProvider, AskAbout, Composer, ConversationView, useAgent } from './Agent.jsx'
 import { LangContext, ROUTES, useLang, useT } from './i18n.js'
 import { LEGAL } from './legal.js'
 
@@ -37,20 +37,11 @@ function useTypedPlaceholder(examples, paused) {
   return text
 }
 
-function useAgentOnline() {
-  const [online, setOnline] = useState(false)
-  useEffect(() => {
-    fetch(`${API_BASE}/agent/profile`).then((r) => setOnline(r.ok)).catch(() => setOnline(false))
-  }, [])
-  return online
-}
-
 function Hero() {
-  const { ask, busy, messages, setOpen } = useAgent()
+  const { ask, busy, messages, setOpen, online } = useAgent()
   const t = useT()
   const [paused, setPaused] = useState(false)
   const typed = useTypedPlaceholder(t.hero.examples, paused)
-  const online = useAgentOnline()
 
   return (
     <section className="hero">

@@ -56,6 +56,22 @@ export function AgentProvider({ children, autoOpen = true }) {
   const [contactOpen, setContactOpen] = useState(false)
   // the full-screen conversation view
   const [open, setOpen] = useState(false)
+  // whether the agent can answer: null until the first check
+  const [online, setOnline] = useState(null)
+
+  // check now, every minute while the page is visible, and whenever the visitor comes back to it
+  useEffect(() => {
+    const check = () => {
+      if (document.visibilityState !== 'visible') return
+      fetch(`${API_BASE}/agent/status`, { cache: 'no-store' })
+        .then((r) => r.json().catch(() => ({})).then((d) => setOnline(r.ok && d.online === true)))
+        .catch(() => setOnline(false))
+    }
+    check()
+    const timer = setInterval(check, 60000)
+    document.addEventListener('visibilitychange', check)
+    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', check) }
+  }, [])
 
   useEffect(() => {
     const saved = load()
@@ -94,6 +110,9 @@ export function AgentProvider({ children, autoOpen = true }) {
         body: JSON.stringify({ conversationId: conversationId(), lang, meta: visitMeta(), messages: history.map((m) => ({ role: m.role, content: m.content })) }),
       })
       const data = await r.json().catch(() => ({}))
+      // an answer proves the agent is up; a server error or resting reply means it isn't
+      if (r.ok) setOnline(true)
+      else if (r.status >= 500) setOnline(false)
       if (typeof data.remaining === 'number') setRemaining(data.remaining)
       // failures stay on screen but out of the history sent back to the model
       if (!r.ok) return fail(question, data.answer || data.error || t.agent.failed, data.offer_contact)
@@ -101,6 +120,7 @@ export function AgentProvider({ children, autoOpen = true }) {
       if (data.contact_saved) setContactOpen(false)
       else if (data.offer_contact) setContactOpen((c) => c || 'offer')
     } catch {
+      setOnline(false)
       fail(question, t.agent.offline)
     } finally {
       setBusy(false)
@@ -121,7 +141,7 @@ export function AgentProvider({ children, autoOpen = true }) {
     setContactOpen(false)
   }
 
-  const value = { messages, busy, ask, contact, reset, remaining, contactOpen, setContactOpen, open, setOpen }
+  const value = { messages, busy, ask, contact, reset, remaining, contactOpen, setContactOpen, open, setOpen, online }
   return <AgentContext.Provider value={value}>{children}</AgentContext.Provider>
 }
 
@@ -337,7 +357,7 @@ function Close() {
  * the thread in a reading column, the question box pinned to the bottom.
  */
 export function ConversationView() {
-  const { open, setOpen, messages, reset, busy, ask } = useAgent()
+  const { open, setOpen, messages, reset, busy, ask, online } = useAgent()
   const lang = useLang()
   const t = useT()
   const starters = t.starters
@@ -355,7 +375,7 @@ export function ConversationView() {
   return (
     <div className="convo" role="dialog" aria-modal="true" aria-label={t.agent.conversation}>
       <header className="convo-bar">
-        <span className="convo-title"><span className="presence on" />{t.hero.ask}</span>
+        <span className="convo-title"><span className={`presence ${online ? 'on' : ''}`} title={online ? t.hero.online : t.hero.offline} />{t.hero.ask}</span>
         <div className="convo-actions">
           {messages.length > 0 && <button type="button" className="inline muted" onClick={reset} disabled={busy}>{t.agent.newConversation}</button>}
           <button type="button" className="icon-btn" aria-label={t.agent.closeConversation} onClick={() => setOpen(false)}><Close /></button>
