@@ -14,7 +14,7 @@
           if (location.pathname !== '/') return
           var saved = localStorage.getItem('lang')
           var preferred = (navigator.languages && navigator.languages[0]) || navigator.language || ''
-          if (saved === 'pl' || (!saved && /^pl\b/i.test(preferred))) location.replace('/pl/' + location.hash)
+          if (saved === 'pl' || (!saved && /^pl\b/i.test(preferred))) location.replace('/pl/' + location.search + location.hash)
         } catch (e) {}
       })()
     </script>

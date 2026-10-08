@@ -73,13 +73,32 @@ export function AgentProvider({ children, autoOpen = true }) {
     return () => { clearInterval(timer); document.removeEventListener('visibilitychange', check) }
   }, [])
 
+  // a link with ?ask=… opens the conversation with that question asked (e.g. from LinkedIn)
+  const [linkQuestion, setLinkQuestion] = useState(null)
+
   useEffect(() => {
     const saved = load()
     setMessages(saved)
     // a visitor with a conversation goes straight back to it, until they start a new one
     if (saved.length && autoOpen) setOpen(true)
     restored.current = true
+    const params = new URLSearchParams(location.search)
+    const question = (params.get('ask') || '').trim().slice(0, 300)
+    if (question) {
+      // asked once: take it out of the address so a refresh doesn't ask again
+      params.delete('ask')
+      history.replaceState(null, '', location.pathname + (params.toString() ? `?${params}` : '') + location.hash)
+      setLinkQuestion(question)
+    }
   }, [])
+
+  // after the restore, so the question joins the visitor's conversation if they have one
+  useEffect(() => {
+    if (linkQuestion && restored.current) {
+      ask(linkQuestion)
+      setLinkQuestion(null)
+    }
+  }, [linkQuestion])
 
   useEffect(() => {
     if (!restored.current) return
