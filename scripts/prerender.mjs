@@ -29,7 +29,7 @@ for (const [page, paths] of Object.entries(ROUTES)) {
     html = swap(html, /<link rel="canonical" href="[^"]*" \/>/, `<link rel="canonical" href="${url}" />`
       + Object.entries(paths).map(([l, p]) => `\n    <link rel="alternate" hreflang="${l}" href="${SITE + p}" />`).join('')
       + `\n    <link rel="alternate" hreflang="x-default" href="${SITE + paths.en}" />`)
-    html = swap(html, /<meta property="og:url" content="[^"]*" \/>/, `<meta property="og:url" content="${url}" />`)
+    // no og:url on purpose: LinkedIn replaces a shared link with it, which drops ?ask= and ?ref=
     html = swap(html, /<meta property="og:locale" content="[^"]*" \/>/, `<meta property="og:locale" content="${lang === 'pl' ? 'pl_PL' : 'en_GB'}" />`)
     if (page !== 'home') {
       html = swap(html, /<meta property="og:title" content="[^"]*" \/>/, `<meta property="og:title" content="${attr(title)}" />`)
