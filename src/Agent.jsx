@@ -6,6 +6,12 @@ const MAX_HISTORY = 20
 const JD_THRESHOLD = 400
 const STORE_KEY = 'lb-agent-conversation'
 const ID_KEY = 'lb-agent-conversation-id'
+const ALOUD_KEY = 'lb-agent-read-aloud'
+// an empty sound, played during a tap so iOS lets the answer play later
+const SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA='
+
+const remember = (key, value) => { try { localStorage.setItem(key, value) } catch {} }
+const recall = (key) => { try { return localStorage.getItem(key) } catch { return null } }
 
 const AgentContext = createContext(null)
 export const useAgent = () => useContext(AgentContext)
@@ -58,14 +64,19 @@ export function AgentProvider({ children, autoOpen = true, askSlug = null }) {
   const [open, setOpen] = useState(false)
   // whether the agent can answer: null until the first check
   const [online, setOnline] = useState(null)
+  // whether answers can be spoken, whether new ones play by themselves, and what's playing
+  const [voiceOn, setVoiceOn] = useState(false)
+  const [aloud, setAloud] = useState(false)
+  const [playing, setPlaying] = useState(null)
+  const audio = useRef(null)
 
   // check now, every minute while the page is visible, and whenever the visitor comes back to it
   useEffect(() => {
     const check = () => {
       if (document.visibilityState !== 'visible') return
       fetch(`${API_BASE}/agent/status`, { cache: 'no-store' })
-        .then((r) => r.json().catch(() => ({})).then((d) => setOnline(r.ok && d.online === true)))
-        .catch(() => setOnline(false))
+        .then((r) => r.json().catch(() => ({})).then((d) => { setOnline(r.ok && d.online === true); setVoiceOn(r.ok && d.voice === true) }))
+        .catch(() => { setOnline(false); setVoiceOn(false) })
     }
     check()
     const timer = setInterval(check, 60000)
@@ -79,6 +90,7 @@ export function AgentProvider({ children, autoOpen = true, askSlug = null }) {
   useEffect(() => {
     const saved = load()
     setMessages(saved)
+    setAloud(recall(ALOUD_KEY) === 'on')
     // a visitor with a conversation goes straight back to it, until they start a new one
     if (saved.length && autoOpen) setOpen(true)
     restored.current = true
@@ -114,9 +126,53 @@ export function AgentProvider({ children, autoOpen = true, askSlug = null }) {
     if (offer) setContactOpen((c) => c || 'offer')
   }
 
+  // one audio element for every answer, so only one plays at a time
+  function player() {
+    if (audio.current) return audio.current
+    const a = new Audio()
+    a.onplaying = () => setPlaying((p) => p && { ...p, loading: false })
+    a.onended = () => setPlaying(null)
+    a.onerror = () => { if (a.dataset.id) setPlaying(null) }
+    audio.current = a
+    return a
+  }
+
+  // must run inside a tap or key press: afterwards iOS lets this element play on its own
+  function unlock() {
+    const a = player()
+    a.dataset.id = ''
+    a.src = SILENT
+    a.play().catch(() => {})
+  }
+
+  function play(id) {
+    const a = player()
+    a.pause()
+    a.dataset.id = id
+    a.src = `${API_BASE}/agent/speech/${conversationId()}/${id}?lang=${lang}`
+    setPlaying({ id, loading: true })
+    a.play().catch(() => setPlaying(null))
+  }
+
+  function stop() {
+    audio.current?.pause()
+    setPlaying(null)
+  }
+
+  function toggleAloud() {
+    const on = !aloud
+    setAloud(on)
+    remember(ALOUD_KEY, on ? 'on' : 'off')
+    if (on) unlock()
+    else stop()
+  }
+
   async function ask(text) {
     const question = text.trim()
     if (!question || busy) return
+    const speak = aloud && voiceOn
+    if (speak) unlock()
+    else stop()
     setOpen(true)
     const next = [...messages, { role: 'user', content: question }]
     setMessages(next)
@@ -139,6 +195,7 @@ export function AgentProvider({ children, autoOpen = true, askSlug = null }) {
       // failures stay on screen but out of the history sent back to the model
       if (!r.ok) return fail(question, data.answer || data.error || t.agent.failed, data.offer_contact)
       setMessages((m) => [...m, { role: 'assistant', content: asText(data), reply: data }])
+      if (speak && data.message_id) play(data.message_id)
       if (data.contact_saved) setContactOpen(false)
       else if (data.offer_contact) setContactOpen((c) => c || 'offer')
     } catch {
@@ -158,12 +215,14 @@ export function AgentProvider({ children, autoOpen = true, askSlug = null }) {
   }
 
   function reset() {
+    stop()
     conversationId(true)
     setMessages([])
     setContactOpen(false)
   }
 
-  const value = { messages, busy, ask, contact, reset, remaining, contactOpen, setContactOpen, open, setOpen, online }
+  const voice = { on: voiceOn, aloud, toggleAloud, playing, play, stop }
+  const value = { messages, busy, ask, contact, reset, remaining, contactOpen, setContactOpen, open, setOpen, online, voice }
   return <AgentContext.Provider value={value}>{children}</AgentContext.Provider>
 }
 
@@ -179,12 +238,44 @@ function Question({ text }) {
   )
 }
 
+function Speaker({ on }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M11 5L6 9H3v6h3l5 4V5z" />
+      {on ? <path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" /> : <path d="M22 9l-6 6M16 9l6 6" />}
+    </svg>
+  )
+}
+
+function PlayStop({ playing }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      {playing ? <rect x="6" y="6" width="12" height="12" rx="1.5" /> : <path d="M7 4.5v15l13-7.5z" />}
+    </svg>
+  )
+}
+
+// plays one answer aloud; the same button stops it
+function Listen({ id }) {
+  const t = useT()
+  const { voice } = useAgent()
+  if (!voice.on || !id) return null
+  const mine = voice.playing?.id === id
+  const label = !mine ? t.agent.listen : voice.playing.loading ? t.agent.loadingAudio : t.agent.stopListening
+  return (
+    <button type="button" className={`listen ${mine ? 'on' : ''} ${mine && voice.playing.loading ? 'loading' : ''}`} onClick={() => (mine ? voice.stop() : voice.play(id))}>
+      <PlayStop playing={mine} />{label}
+    </button>
+  )
+}
+
 function Answer({ reply }) {
   const t = useT()
   const fit = reply.fit || { strong: [], discuss: [] }
   return (
     <div className="ex-a">
       {reply.answer && <p className="answer">{reply.answer}</p>}
+      <Listen id={reply.message_id} />
       {(fit.strong?.length > 0 || fit.discuss?.length > 0) && (
         <div className="fit">
           {fit.strong.length > 0 && <div><h4>{t.agent.matches}</h4><ul>{fit.strong.map((s) => <li key={s}>{s}</li>)}</ul></div>}
@@ -329,7 +420,7 @@ function ArrowUp() {
  * The question box: used in the hero panel and pinned to the bottom of the conversation view.
  */
 export function Composer({ placeholder, autoFocus, onActiveChange }) {
-  const { ask, busy } = useAgent()
+  const { ask, busy, voice } = useAgent()
   const t = useT()
   const [draft, setDraft] = useState('')
   const [focused, setFocused] = useState(false)
@@ -361,6 +452,7 @@ export function Composer({ placeholder, autoFocus, onActiveChange }) {
         onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) submit(e) }}
         placeholder={placeholder}
       />
+      {voice.on && <button type="button" className="aloud" aria-label={t.agent.readAloud} title={t.agent.readAloud} aria-pressed={voice.aloud} onClick={voice.toggleAloud}><Speaker on={voice.aloud} /></button>}
       <button type="submit" className="send" aria-label={t.agent.askButton} disabled={busy}><ArrowUp /></button>
     </form>
   )
