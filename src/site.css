@@ -171,9 +171,9 @@ button:disabled { cursor: default; opacity: 0.5; }
 
 /* ───── footer ───── */
 .foot { margin-top: 128px; background: var(--night); color: var(--night-text); }
-.foot-in { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px; padding-top: 56px; padding-bottom: 56px; }
+.foot-in { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 24px; padding-top: 72px; padding-bottom: 56px; }
 .foot p { margin: 0; font: 400 clamp(28px, 3.4vw, 40px)/1.15 var(--serif); }
-.foot .rights { margin: 0; padding-bottom: 32px; font: 400 13px/1.5 var(--sans); color: var(--night-muted); }
+.foot .rights { margin: 0; padding-top: 24px; padding-bottom: 48px; border-top: 1px solid var(--night-line); font: 400 13px/1.5 var(--sans); color: var(--night-muted); }
 .foot .rights a, .saved-note a { color: inherit; text-decoration: underline; text-decoration-color: var(--night-line); text-underline-offset: 3px; }
 .foot .rights a:hover, .saved-note a:hover { color: var(--night-text); text-decoration-color: var(--teal); }
 
@@ -198,7 +198,7 @@ button:disabled { cursor: default; opacity: 0.5; }
   .fit { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 560px) {
-  .wrap { padding: 0 16px; }
+  .wrap { padding-left: 16px; padding-right: 16px; }
   .top nav { gap: 16px; }
   .top nav a[href^="#"] { display: none; }
   .logo { font-size: 23px; }
